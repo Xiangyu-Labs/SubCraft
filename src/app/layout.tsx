@@ -1,3 +1,6 @@
+import "./globals.css";
+import { Providers } from "@/components/providers";
+
 export const metadata = {
   title: "{{PROJECT_NAME}}",
 };
@@ -9,7 +12,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh">
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
