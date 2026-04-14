@@ -27,4 +27,8 @@ COPY --from=builder /app/node_modules ./node_modules
 RUN mkdir -p /app/data && chown -R node:node /app/data
 USER node
 EXPOSE 3000
-CMD ["node", "server.js"]
+
+# Copy entrypoint script with executable permission
+COPY --chmod=755 docker-entrypoint.sh ./
+
+CMD ["./docker-entrypoint.sh"]

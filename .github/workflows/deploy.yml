@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: production-deploy
+  group: ci-cd-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -38,9 +38,39 @@ jobs:
       - name: Integration tests
         run: npm run test:integration
 
+      - name: Write .env
+        if: github.ref == 'refs/heads/main'
+        run: echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
+
       - name: Deploy
         if: github.ref == 'refs/heads/main'
-        run: bash scripts/deploy.sh
+        run: |
+          set -euo pipefail
+          echo "[deploy] current dir: $(pwd)"
+
+          echo "[deploy] building..."
+          docker compose build
+
+          echo "[deploy] starting containers..."
+          docker compose up -d
+
+          sleep 5
+          APP_CONTAINER=$(docker compose ps -q app)
+          if [ -z "$APP_CONTAINER" ]; then
+            echo "[deploy] app container is not running"
+            exit 1
+          fi
+
+          echo "[deploy] health check..."
+          docker exec "$APP_CONTAINER" node -e "
+            const http = require('http');
+            const req = http.get('http://127.0.0.1:3000', (res) => process.exit(res.statusCode === 200 ? 0 : 1));
+            req.on('error', () => process.exit(1));
+            req.setTimeout(5000, () => process.exit(1));
+          "
+
+          echo "[deploy] successful"
+          docker image prune -f
 
       - name: Notify on failure
         if: failure()
