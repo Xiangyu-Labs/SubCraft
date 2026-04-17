@@ -13,6 +13,8 @@
   --color-border: var(--border);
   --color-ring: var(--ring);
   --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
 
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
@@ -37,6 +39,8 @@
   --border: #e5e5e5;
   --ring: #10a37f;
   --danger: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
 
   --radius: 8px;
   --radius-sm: calc(var(--radius) - 4px);
@@ -109,6 +113,8 @@ body {
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
 }
 
 @layer base {
