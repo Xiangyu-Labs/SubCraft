@@ -4,21 +4,10 @@ services:
       context: .
       args:
         - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
-    container_name: ${PROJECT_NAME}
     restart: always
     env_file:
       - .env
     volumes:
       - ./data:/app/data
-    networks:
-      - server-internal-net
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.${PROJECT_NAME}.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.routers.${PROJECT_NAME}.entrypoints=websecure"
-      - "traefik.http.routers.${PROJECT_NAME}.tls.certresolver=letsencrypt"
-      - "traefik.http.services.${PROJECT_NAME}.loadbalancer.server.port=3000"
-
-networks:
-  server-internal-net:
-    external: true
+    ports:
+      - "3000:3000"
