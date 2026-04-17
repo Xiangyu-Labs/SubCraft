@@ -6,10 +6,10 @@ export default function Home() {
       <h1 className="text-2xl font-semibold">My App</h1>
       <Link
         href="/ui"
-        className="h-9 rounded-md px-4 text-sm font-medium text-white shadow-sm transition-all active:scale-[0.99]"
+        className="inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-white shadow-sm transition-all active:scale-[0.99]"
         style={{ background: "var(--primary)" }}
       >
-        组件展示
+        UI Reference
       </Link>
     </main>
   );
