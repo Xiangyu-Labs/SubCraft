@@ -9,7 +9,7 @@ export default function Home() {
         className="h-9 rounded-md px-4 text-sm font-medium text-white shadow-sm transition-all active:scale-[0.99]"
         style={{ background: "var(--primary)" }}
       >
-        UI Reference
+        组件展示
       </Link>
     </main>
   );
