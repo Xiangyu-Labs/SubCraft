@@ -2,7 +2,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 
 export const metadata = {
-  title: "{{PROJECT_NAME}}",
+  title: "My App",
 };
 
 export default function RootLayout({
