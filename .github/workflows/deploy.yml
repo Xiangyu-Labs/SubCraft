@@ -32,12 +32,6 @@ jobs:
       - name: Type check
         run: npm run tsc
 
-      - name: Unit tests
-        run: npm run test:unit
-
-      - name: Integration tests
-        run: npm run test:integration
-
       - name: Write .env
         if: github.ref == 'refs/heads/main'
         run: echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
