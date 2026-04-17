@@ -39,7 +39,7 @@ NEXT_PUBLIC_APP_URL=https://app.example.com
 TZ=Asia/Shanghai
 ```
 
-如有密钥（如 API Key），写入 `.env.local`（已受 `.gitignore` 保护）：
+密钥写入 `.env.local`（已受 `.gitignore` 保护）：
 
 ```
 OPENAI_BASE_URL=https://llm.xiangyu.pro/v1
@@ -53,6 +53,15 @@ RESEND_API_KEY=re_xxx
 npm run dev
 ```
 
+## 脚本
+
+| 命令 | 说明 |
+|------|------|
+| `npm run dev` | 开发服务器 |
+| `npm run build` | 生产构建 |
+| `npm run lint` | ESLint 检查 |
+| `npm run tsc` | TypeScript 类型检查 |
+
 ## Docker 部署
 
 ### 本地构建运行
@@ -65,7 +74,7 @@ docker compose up --build
 
 ### 生产部署（带 Traefik + Watchtower）
 
-生产环境使用 `docker-compose.override.yml` 叠加配置，包含：
+生产环境使用 `docker-compose.override.yml` 叠加配置：
 
 - Traefik 反向代理 + HTTPS 自动证书
 - Watchtower 自动更新标签
@@ -108,7 +117,7 @@ GitHub Actions 工作流包含两个并行 job：
 ├── src/
 │   ├── app/              # Next.js App Router
 │   ├── components/
-│   │   └── ui/           # shadcn/ui 组件
+│   │   └── ui/           # shadcn/ui 组件 (button, card, input)
 │   └── lib/
 │       └── utils.ts      # cn() 工具函数
 ├── .github/workflows/    # CI/CD
@@ -123,6 +132,9 @@ GitHub Actions 工作流包含两个并行 job：
 ## 添加 shadcn/ui 组件
 
 ```bash
+# 如需图标支持，先安装 lucide-react
+npm install lucide-react
+
 npx shadcn add button card input
 ```
 
