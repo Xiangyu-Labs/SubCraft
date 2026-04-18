@@ -18,13 +18,24 @@ npx degit xiangyu-labs/nextjs-template my-project
 cd my-project
 ```
 
-### 2. 安装依赖
+### 2. 创建仓库并配置 Remote
+
+在 [Xiangyu-Labs](https://github.com/Xiangyu-Labs) 组织下创建同名仓库，然后初始化本地仓库并设置 SSH Remote：
+
+```bash
+git init
+git remote add origin git@github.com:Xiangyu-Labs/my-project.git
+```
+
+> 使用 SSH 格式 Remote（`git@github.com:...`），避免 HTTPS 推送时的认证问题。确保本地已配置 [GitHub SSH 密钥](https://docs.github.com/zh/authentication/connecting-to-github-with-ssh)。
+
+### 3. 安装依赖
 
 ```bash
 npm install
 ```
 
-### 3. 配置环境变量
+### 4. 配置环境变量
 
 ```bash
 cp .env.example .env
@@ -49,7 +60,7 @@ OPENAI_API_KEY=sk-xxx
 RESEND_API_KEY=re-xxx
 ```
 
-### 4. 修改项目标题
+### 5. 修改项目标题
 
 创建新项目后，请将以下位置的标题修改为对应的项目名：
 
@@ -60,7 +71,7 @@ RESEND_API_KEY=re-xxx
 | `package.json` | `name` | npm 包名 |
 | `README.md` | `#` 标题 | 项目文档标题 |
 
-### 5. 本地开发
+### 6. 本地开发
 
 ```bash
 npm run dev
