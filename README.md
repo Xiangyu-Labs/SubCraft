@@ -35,7 +35,7 @@ cp .env.example .env
 ```
 PROJECT_NAME=my-project
 DOMAIN=app.example.com
-NEXT_PUBLIC_APP_URL=https://app.example.com
+NEXT_PUBLIC_APP_URL=https://${DOMAIN}
 TZ=Asia/Shanghai
 ```
 
@@ -44,10 +44,21 @@ TZ=Asia/Shanghai
 ```
 OPENAI_BASE_URL=https://llm.xiangyu.pro/v1
 OPENAI_API_KEY=sk-xxx
-RESEND_API_KEY=re_xxx
+RESEND_API_KEY=re-xxx
 ```
 
-### 4. 本地开发
+### 4. 修改项目标题
+
+创建新项目后，请将以下位置的标题修改为对应的项目名：
+
+| 文件 | 字段 / 位置 | 说明 |
+|------|------------|------|
+| `src/app/layout.tsx` | `metadata.title` | 浏览器标签页标题 |
+| `src/app/page.tsx` | `<h1>` 或页面主标题 | 首页标题 |
+| `package.json` | `name` | npm 包名 |
+| `README.md` | `#` 标题 | 项目文档标题 |
+
+### 5. 本地开发
 
 ```bash
 npm run dev
