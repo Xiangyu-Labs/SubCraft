@@ -11,6 +11,8 @@ ARG NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# 确保 public 目录存在（即使没有静态文件），避免 runner COPY 失败
+RUN mkdir -p /app/public
 RUN npm run build
 
 FROM base AS runner
