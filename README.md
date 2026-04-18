@@ -33,7 +33,9 @@ cp .env.example .env
 编辑 `.env`：
 
 ```
+GITHUB_OWNER=Xiangyu-Labs
 PROJECT_NAME=my-project
+IMAGE=ghcr.io/${GITHUB_OWNER}/${PROJECT_NAME}
 DOMAIN=app.example.com
 NEXT_PUBLIC_APP_URL=https://${DOMAIN}
 TZ=Asia/Shanghai
