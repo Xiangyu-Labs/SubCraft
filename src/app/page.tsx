@@ -1,17 +1,15 @@
-import Link from "next/link";
+import { SubscriptionForm } from "@/components/subscription-form";
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6">
-      <h1 className="text-2xl font-semibold">SubCraft</h1>
-      <p className="text-sm text-muted-foreground">代理订阅转换工具</p>
-      <Link
-        href="/ui"
-        className="inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-white shadow-sm transition-all active:scale-[0.99]"
-        style={{ background: "var(--primary)" }}
-      >
-        UI Reference
-      </Link>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-6">
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-semibold">SubCraft</h1>
+        <p className="text-sm text-muted-foreground">
+          无状态的代理订阅转换工具
+        </p>
+      </div>
+      <SubscriptionForm />
     </main>
   );
 }
