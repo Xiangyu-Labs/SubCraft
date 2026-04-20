@@ -7,11 +7,33 @@ export type RuleTemplate = 'minimal' | 'balanced' | 'global';
 // 客户端类型
 export type ClientType = 'clash';
 
+// Clash 基础配置选项
+export interface ClashBaseConfig {
+  mixedPort: number;
+  allowLan: boolean;
+  mode: 'rule' | 'global' | 'direct';
+  logLevel: 'info' | 'warning' | 'error' | 'debug' | 'silent';
+  ipv6: boolean;
+}
+
+// Clash DNS 配置选项
+export interface ClashDNSOptions {
+  enable: boolean;
+  ipv6: boolean;
+  enhancedMode: 'fake-ip' | 'redir-host';
+  fakeIpRange: string;
+  fakeIpFilter: string[];
+  nameserver: string[];
+  fallback: string[];
+}
+
 // 订阅数据结构
 export interface SubscriptionData {
   links: string[];           // 代理链接数组
   template: RuleTemplate;    // 规则模板
   client: ClientType;        // 客户端类型
+  baseConfig?: ClashBaseConfig;  // 可选，有默认值
+  dnsOptions?: ClashDNSOptions;  // 可选，有默认值
 }
 
 // Vless 节点配置
@@ -48,19 +70,35 @@ export interface ClashProxy {
   };
 }
 
+// DNS 配置（用于 YAML 生成）
+export interface ClashDNSConfig {
+  enable: boolean;
+  ipv6: boolean;
+  'enhanced-mode': 'fake-ip' | 'redir-host';
+  'fake-ip-range': string;
+  'fake-ip-filter': string[];
+  nameserver: string[];
+  fallback: string[];
+  'fallback-filter': {
+    geoip: boolean;
+    'geoip-code': string;
+    ipcidr: string[];
+  };
+}
+
 // Clash 配置
 export interface ClashConfig {
+  'mixed-port': number;
+  'allow-lan': boolean;
+  mode: 'rule' | 'global' | 'direct';
+  'log-level': 'info' | 'warning' | 'error' | 'debug' | 'silent';
+  ipv6: boolean;
+  dns: ClashDNSConfig;
   proxies: ClashProxy[];
   'proxy-groups': Array<{
     name: string;
     type: string;
     proxies: string[];
-  }>;
-  'rule-providers'?: Record<string, {
-    type: string;
-    behavior: string;
-    url: string;
-    interval: number;
   }>;
   rules: string[];
 }

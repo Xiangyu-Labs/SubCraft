@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const clashConfig = generateClashConfig(nodes, subscriptionData.template);
+    const clashConfig = await generateClashConfig(nodes, subscriptionData);
     const yamlContent = yaml.dump(clashConfig, {
       lineWidth: -1,
       noRefs: true,
