@@ -44,13 +44,15 @@ cp .env.example .env
 编辑 `.env`：
 
 ```
-GITHUB_OWNER=Xiangyu-Labs
+GITHUB_OWNER=xiangyu-labs
 PROJECT_NAME=my-project
 IMAGE=ghcr.io/${GITHUB_OWNER}/${PROJECT_NAME}
 DOMAIN=app.example.com
 NEXT_PUBLIC_APP_URL=https://${DOMAIN}
 TZ=Asia/Shanghai
 ```
+
+> **注意**：`GITHUB_OWNER` 和 `PROJECT_NAME` 必须全部使用**小写字母**。GHCR 镜像地址 `ghcr.io/<owner>/<repo>` 不区分大小写，但统一小写可避免潜在问题。
 
 密钥写入 `.env.local`（已受 `.gitignore` 保护）：
 
