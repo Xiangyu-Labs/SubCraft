@@ -1,17 +1,6 @@
 import "./globals.css";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 
-const foucScript = `
-  (function() {
-    var theme = localStorage.getItem("app-theme") || "modern";
-    var dark = localStorage.getItem("app-dark-mode");
-    document.documentElement.setAttribute("data-theme", theme);
-    if (dark === "true" || (dark === null && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-      document.documentElement.classList.add("dark");
-    }
-  })();
-`;
-
 export const metadata = {
   title: "SubCraft - 订阅转换工具",
 };
@@ -22,7 +11,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="zh" data-scroll-behavior="smooth">
+    <html lang="zh" data-theme="modern" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -30,10 +19,24 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet"
         />
-        <script dangerouslySetInnerHTML={{ __html: foucScript }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem("app-theme") || "modern";
+                  var dark = localStorage.getItem("app-dark-mode");
+                  document.documentElement.setAttribute("data-theme", theme);
+                  if (dark === "true" || (dark === null && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+                    document.documentElement.classList.add("dark");
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
-      <body>
-        {/* Global Theme Bar — 右下角浮动，避免遮挡 header 按钮 */}
+      <body suppressHydrationWarning>
         <div
           className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-lg border px-3 py-2 shadow-lg"
           style={{

@@ -35,8 +35,8 @@ export function SubscriptionForm() {
       const url = `${baseUrl}/api/sub?data=${encoded}`;
       setSubscriptionUrl(url);
     } catch (err) {
+      console.error('生成失败:', err);
       setError('生成订阅链接失败');
-      console.error(err);
     }
   };
 
