@@ -13,7 +13,7 @@ const foucScript = `
 `;
 
 export const metadata = {
-  title: "SubCraft - Vless to Clash Converter",
+  title: "SubCraft - 订阅转换工具",
 };
 
 export default function RootLayout({
