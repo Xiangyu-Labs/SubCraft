@@ -10,6 +10,14 @@ export function SubscriptionForm() {
   const [template, setTemplate] = useState<RuleTemplate>('balanced');
   const [subscriptionUrl, setSubscriptionUrl] = useState('');
   const [error, setError] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [mixedPort, setMixedPort] = useState(7890);
+  const [allowLan, setAllowLan] = useState(false);
+  const [mode, setMode] = useState<'rule' | 'global' | 'direct'>('rule');
+  const [enableDns, setEnableDns] = useState(true);
+  const [fakeIpFilter, setFakeIpFilter] = useState('*.lan\n*.local\n*.localhost');
+  const [nameserver, setNameserver] = useState('119.29.29.29\n223.5.5.5');
+  const [fallback, setFallback] = useState('tls://1.1.1.1:853\ntls://8.8.8.8:853');
 
   const handleGenerate = () => {
     try {
@@ -29,6 +37,22 @@ export function SubscriptionForm() {
         links: linkArray,
         template,
         client: 'clash',
+        baseConfig: {
+          mixedPort,
+          allowLan,
+          mode,
+          logLevel: 'info',
+          ipv6: false,
+        },
+        dnsOptions: {
+          enable: enableDns,
+          ipv6: false,
+          enhancedMode: 'fake-ip',
+          fakeIpRange: '198.18.0.1/16',
+          fakeIpFilter: fakeIpFilter.split('\n').map(s => s.trim()).filter(s => s),
+          nameserver: nameserver.split('\n').map(s => s.trim()).filter(s => s),
+          fallback: fallback.split('\n').map(s => s.trim()).filter(s => s),
+        },
       });
 
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
@@ -87,6 +111,136 @@ export function SubscriptionForm() {
           ))}
         </select>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setShowAdvanced(!showAdvanced)}
+        className="text-sm font-medium text-blue-600 hover:text-blue-700"
+      >
+        {showAdvanced ? '隐藏' : '显示'}高级配置
+      </button>
+
+      {showAdvanced && (
+        <div className="space-y-4 p-4 rounded-md border" style={{ borderColor: 'var(--border)' }}>
+          <h3 className="text-sm font-semibold">基础配置</h3>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">代理端口</label>
+            <input
+              type="number"
+              value={mixedPort}
+              onChange={(e) => setMixedPort(Number(e.target.value))}
+              className="w-full px-3 py-2 rounded-md border"
+              style={{
+                background: 'var(--surface)',
+                borderColor: 'var(--border)',
+                color: 'var(--text)',
+              }}
+            />
+            <p className="text-xs text-muted-foreground">HTTP + SOCKS5 混合端口，默认 7890</p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="allowLan"
+              checked={allowLan}
+              onChange={(e) => setAllowLan(e.target.checked)}
+              className="w-4 h-4"
+            />
+            <label htmlFor="allowLan" className="text-sm font-medium">允许局域网连接</label>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">代理模式</label>
+            <select
+              value={mode}
+              onChange={(e) => setMode(e.target.value as 'rule' | 'global' | 'direct')}
+              className="w-full px-3 py-2 rounded-md border"
+              style={{
+                background: 'var(--surface)',
+                borderColor: 'var(--border)',
+                color: 'var(--text)',
+              }}
+            >
+              <option value="rule">规则模式</option>
+              <option value="global">全局代理</option>
+              <option value="direct">直连模式</option>
+            </select>
+          </div>
+
+          <h3 className="text-sm font-semibold mt-4">DNS 配置</h3>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="enableDns"
+              checked={enableDns}
+              onChange={(e) => setEnableDns(e.target.checked)}
+              className="w-4 h-4"
+            />
+            <label htmlFor="enableDns" className="text-sm font-medium">启用 DNS</label>
+          </div>
+
+          {enableDns && (
+            <>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Fake-IP 过滤列表</label>
+                <textarea
+                  value={fakeIpFilter}
+                  onChange={(e) => setFakeIpFilter(e.target.value)}
+                  placeholder="*.lan&#10;*.local&#10;*.ts.net"
+                  className="w-full h-24 px-3 py-2 rounded-md border resize-none font-mono text-sm"
+                  style={{
+                    background: 'var(--surface)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--text)',
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  这些域名不走 fake-ip，直接用真实 DNS 解析（每行一个）
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">DNS 服务器（国内）</label>
+                <textarea
+                  value={nameserver}
+                  onChange={(e) => setNameserver(e.target.value)}
+                  placeholder="119.29.29.29&#10;223.5.5.5"
+                  className="w-full h-20 px-3 py-2 rounded-md border resize-none font-mono text-sm"
+                  style={{
+                    background: 'var(--surface)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--text)',
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  用于解析国内域名（每行一个）
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">备用 DNS（国外）</label>
+                <textarea
+                  value={fallback}
+                  onChange={(e) => setFallback(e.target.value)}
+                  placeholder="tls://1.1.1.1:853&#10;tls://8.8.8.8:853"
+                  className="w-full h-20 px-3 py-2 rounded-md border resize-none font-mono text-sm"
+                  style={{
+                    background: 'var(--surface)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--text)',
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  用于解析国外域名（每行一个）
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {error && (
         <div className="p-3 rounded-md bg-red-50 text-red-600 text-sm">
