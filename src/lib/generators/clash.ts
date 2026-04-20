@@ -134,7 +134,9 @@ async function fetchRules(url: string): Promise<string[]> {
     }
     if (inPayload && trimmed.startsWith('- ')) {
       // 移除前缀 "- " 和引号
-      const domain = trimmed.slice(2).replace(/^['"]|['"]$/g, '');
+      let domain = trimmed.slice(2).replace(/^['"]|['"]$/g, '');
+      // 移除 +. 前缀（Clash DOMAIN-SUFFIX 规则不需要这个）
+      domain = domain.replace(/^\+\./, '');
       rules.push(domain);
     }
   }
