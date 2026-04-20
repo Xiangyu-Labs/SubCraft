@@ -1,6 +1,29 @@
-# Next.js Self-Hosted Template
+# SubCraft
 
-一个轻量的 Next.js 模板，用于快速搭建可自托管的 Web 应用。
+无状态的 Vless 到 Clash 订阅转换服务。
+
+## 功能特点
+
+- 🔒 **完全无状态**：不存储任何用户数据，所有信息编码在 URL 中
+- 🚀 **实时生成**：动态解析 vless 链接并生成 Clash 配置
+- ⚙️ **自定义规则**：支持配置代理、直连、拦截规则
+- 🎨 **现代化界面**：基于 Next.js 16 + React 19 + Tailwind CSS v4
+
+## 工作原理
+
+```
+用户输入 vless 链接 + 规则配置
+    ↓
+前端编码（Base64 + 压缩）
+    ↓
+生成订阅 URL: /api/sub/{encoded_data}
+    ↓
+Clash 客户端请求该 URL
+    ↓
+后端解码 → 解析 vless → 添加规则 → 生成 Clash YAML
+    ↓
+返回给 Clash 客户端
+```
 
 ## 技术栈
 
@@ -11,31 +34,20 @@
 
 ## 快速开始
 
-### 1. 初始化项目
+### 1. 克隆项目
 
 ```bash
-npx degit xiangyu-labs/nextjs-template my-project
-cd my-project
+git clone git@github.com:Xiangyu-Labs/SubCraft.git
+cd SubCraft
 ```
 
-### 2. 创建仓库并配置 Remote
-
-在 [Xiangyu-Labs](https://github.com/Xiangyu-Labs) 组织下创建同名仓库，然后初始化本地仓库并设置 SSH Remote：
-
-```bash
-git init
-git remote add origin git@github.com:Xiangyu-Labs/my-project.git
-```
-
-> 使用 SSH 格式 Remote（`git@github.com:...`），避免 HTTPS 推送时的认证问题。确保本地已配置 [GitHub SSH 密钥](https://docs.github.com/zh/authentication/connecting-to-github-with-ssh)。
-
-### 3. 安装依赖
+### 2. 安装依赖
 
 ```bash
 npm install
 ```
 
-### 4. 配置环境变量
+### 3. 配置环境变量
 
 ```bash
 cp .env.example .env
@@ -45,48 +57,30 @@ cp .env.example .env
 
 ```
 GITHUB_OWNER=xiangyu-labs
-PROJECT_NAME=my-project
+PROJECT_NAME=subcraft
 IMAGE=ghcr.io/${GITHUB_OWNER}/${PROJECT_NAME}
-DOMAIN=app.example.com
+DOMAIN=sub.yourdomain.com
 NEXT_PUBLIC_APP_URL=https://${DOMAIN}
 TZ=Asia/Shanghai
 ```
 
-> **注意**：`GITHUB_OWNER` 和 `PROJECT_NAME` 必须全部使用**小写字母**。GHCR 镜像地址 `ghcr.io/<owner>/<repo>` 不区分大小写，但统一小写可避免潜在问题。
+> **注意**：`GITHUB_OWNER` 和 `PROJECT_NAME` 必须全部使用**小写字母**。
 
-密钥写入 `.env.local`（已受 `.gitignore` 保护）：
-
-```
-OPENAI_BASE_URL=https://llm.xiangyu.pro/v1
-OPENAI_API_KEY=sk-xxx
-RESEND_API_KEY=re-xxx
-```
-
-### 5. 修改项目标题
-
-创建新项目后，请将以下位置的标题修改为对应的项目名：
-
-| 文件 | 字段 / 位置 | 说明 |
-|------|------------|------|
-| `src/app/layout.tsx` | `metadata.title` | 浏览器标签页标题 |
-| `src/app/page.tsx` | `<h1>` 或页面主标题 | 首页标题 |
-| `package.json` | `name` | npm 包名 |
-| `README.md` | `#` 标题 | 项目文档标题 |
-
-### 6. 本地开发
+### 4. 本地开发
 
 ```bash
 npm run dev
 ```
 
-## 脚本
+访问 `http://localhost:3000`
 
-| 命令 | 说明 |
-|------|------|
-| `npm run dev` | 开发服务器 |
-| `npm run build` | 生产构建 |
-| `npm run lint` | ESLint 检查 |
-| `npm run tsc` | TypeScript 类型检查 |
+## 使用方法
+
+1. 在首页输入一个或多个 vless 链接（每行一个）
+2. 配置代理规则（可选）
+3. 点击"生成订阅链接"
+4. 复制生成的订阅 URL
+5. 在 Clash 客户端中添加该订阅链接
 
 ## Docker 部署
 
@@ -96,15 +90,7 @@ npm run dev
 docker compose up --build
 ```
 
-服务默认暴露在 `http://localhost:3000`。
-
 ### 生产部署（带 Traefik + Watchtower）
-
-生产环境使用 `docker-compose.override.yml` 叠加配置：
-
-- Traefik 反向代理 + HTTPS 自动证书
-- Watchtower 自动更新标签
-- 自定义容器名 + 外部网络
 
 确保已创建外部网络：
 
@@ -120,49 +106,49 @@ docker compose up -d
 
 ## CI/CD
 
-GitHub Actions 工作流包含两个并行 job：
+GitHub Actions 自动构建并推送 Docker 镜像到 GHCR。
 
-| Job | 触发条件 | 说明 |
-|-----|---------|------|
-| `test` | 所有 push / PR | lint + TypeScript 类型检查 |
-| `build-and-push` | push 到 main | 构建 Docker 镜像并推送至 GHCR |
-
-镜像地址：`ghcr.io/<owner>/<repo>`，tag 为 `latest` 和短 SHA。
+镜像地址：`ghcr.io/xiangyu-labs/subcraft`
 
 ### 所需配置
 
 在 GitHub 仓库的 **Settings > Secrets and variables > Actions** 中配置：
 
 - **Variables**: `NEXT_PUBLIC_APP_URL`
-- **Secrets**: `GITHUB_TOKEN`（默认已有，无需手动添加）
+- **Secrets**: `GITHUB_TOKEN`（默认已有）
 
-## 目录结构
+## 项目结构
 
 ```
 .
 ├── src/
-│   ├── app/              # Next.js App Router
+│   ├── app/
+│   │   ├── page.tsx              # 首页：输入表单
+│   │   ├── layout.tsx            # 全局布局
+│   │   └── api/
+│   │       ├── generate/         # 生成订阅链接 API
+│   │       └── sub/[encoded]/    # 返回 Clash 配置 API
 │   ├── components/
-│   │   └── ui/           # shadcn/ui 组件 (button, card, input)
+│   │   └── ui/                   # shadcn/ui 组件
 │   └── lib/
-│       └── utils.ts      # cn() 工具函数
-├── .github/workflows/    # CI/CD
-├── docker-compose.yml    # 基础 Docker 配置
-├── docker-compose.override.yml  # 生产叠加配置
+│       ├── vless-parser.ts       # vless 链接解析
+│       ├── clash-generator.ts    # Clash 配置生成
+│       ├── encoder.ts            # 数据编码/解码
+│       └── rules.ts              # 预设规则
+├── .github/workflows/            # CI/CD
+├── docker-compose.yml
 ├── Dockerfile
-├── .env.example          # 环境变量模板
-├── .env.local            # 本地密钥（gitignore）
-└── next.config.ts
+└── README.md
 ```
 
-## 添加 shadcn/ui 组件
+## 脚本
 
-```bash
-# 如需图标支持，先安装 lucide-react
-npm install lucide-react
-
-npx shadcn add button card input
-```
+| 命令 | 说明 |
+|------|------|
+| `npm run dev` | 开发服务器 |
+| `npm run build` | 生产构建 |
+| `npm run lint` | ESLint 检查 |
+| `npm run tsc` | TypeScript 类型检查 |
 
 ## License
 

@@ -13,7 +13,7 @@ const foucScript = `
 `;
 
 export const metadata = {
-  title: "My App",
+  title: "SubCraft - Vless to Clash Converter",
 };
 
 export default function RootLayout({
