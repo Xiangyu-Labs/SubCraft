@@ -118,3 +118,22 @@ export interface ClashConfig {
   }>;
   rules: string[];
 }
+
+// Shadowrocket 代理节点
+export interface ShadowrocketProxy {
+  name: string;
+  type: string;
+  server: string;
+  port: number;
+  uuid: string;
+  tls?: boolean;
+  'skip-cert-verify'?: boolean;
+  servername?: string;
+  'client-fingerprint'?: string;
+  network?: string;
+  'ws-path'?: string;
+  'ws-headers'?: string;
+}
+
+// Shadowrocket 配置（输出为纯文本 .conf）
+export type ShadowrocketConfig = string;
