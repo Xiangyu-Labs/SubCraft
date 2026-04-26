@@ -57,4 +57,33 @@ describe('functions/api/sub', () => {
     expect(body).toContain('proxies:');
     expect(body).toContain('TestNode');
   });
+
+  it('returns 200 with only valid nodes when some links fail', async () => {
+    const data: SubscriptionData = {
+      links: [
+        'vless://uuid@example.com:443?encryption=none#ValidNode',
+        'not-a-vless-link',
+      ],
+      template: 'pure',
+      client: 'clash',
+    };
+    const encoded = encodeSubscriptionData(data);
+    const res = await onRequestGet(
+      makeContext(`https://app.test/api/sub?data=${encoded}`),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toContain('ValidNode');
+    expect(body).not.toContain('not-a-vless-link');
+  });
+
+  it('returns 400 when data param exceeds 64KB', async () => {
+    const oversized = 'a'.repeat(65537);
+    const res = await onRequestGet(
+      makeContext(`https://app.test/api/sub?data=${oversized}`),
+    );
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toBe('Data too large');
+  });
 });

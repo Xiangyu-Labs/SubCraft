@@ -12,11 +12,26 @@ export const onRequestGet: PagesFunction = async (context) => {
     return Response.json({ error: 'Missing data parameter' }, { status: 400 });
   }
 
+  if (data.length > 65536) {
+    return Response.json({ error: 'Data too large' }, { status: 400 });
+  }
+
   let subscriptionData;
   try {
     subscriptionData = decodeSubscriptionData(data);
   } catch {
     return Response.json({ error: 'Invalid encoded data' }, { status: 400 });
+  }
+
+  if (
+    !Array.isArray(subscriptionData.links) ||
+    typeof subscriptionData.template !== 'string' ||
+    typeof subscriptionData.client !== 'string'
+  ) {
+    return Response.json(
+      { error: 'Invalid subscription data structure' },
+      { status: 400 },
+    );
   }
 
   const nodes: VlessNode[] = subscriptionData.links
