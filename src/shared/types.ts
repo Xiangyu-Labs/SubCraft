@@ -2,7 +2,7 @@
 export type ProxyProtocol = 'vless' | 'vmess' | 'trojan' | 'ss';
 
 // 规则模板 ID
-export type RuleTemplate = 'minimal' | 'balanced' | 'global' | 'pure';
+export type RuleTemplate = 'blacklist' | 'blacklist-adguard' | 'whitelist' | 'whitelist-adguard';
 
 // 客户端类型
 export type ClientType = 'clash';

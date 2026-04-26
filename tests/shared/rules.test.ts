@@ -4,10 +4,10 @@ import { ruleTemplates } from '@/shared/rules';
 describe('ruleTemplates', () => {
   it('exposes the four expected templates', () => {
     expect(Object.keys(ruleTemplates).sort()).toEqual([
-      'balanced',
-      'global',
-      'minimal',
-      'pure',
+      'blacklist',
+      'blacklist-adguard',
+      'whitelist',
+      'whitelist-adguard',
     ]);
   });
 

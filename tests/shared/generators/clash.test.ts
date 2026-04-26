@@ -18,7 +18,7 @@ describe('clash generator', () => {
   it('should generate basic clash config', async () => {
     const subscriptionData: SubscriptionData = {
       links: [],
-      template: 'minimal',
+      template: 'blacklist',
       client: 'clash',
     };
     const config = await generateClashConfig(testNodes, subscriptionData);
@@ -35,7 +35,7 @@ describe('clash generator', () => {
   it('should include expanded rules for balanced template', async () => {
     const subscriptionData: SubscriptionData = {
       links: [],
-      template: 'balanced',
+      template: 'blacklist-adguard',
       client: 'clash',
     };
     const config = await generateClashConfig(testNodes, subscriptionData);
@@ -51,7 +51,7 @@ describe('clash generator', () => {
     ];
     const subscriptionData: SubscriptionData = {
       links: [],
-      template: 'global',
+      template: 'whitelist',
       client: 'clash',
     };
     const config = await generateClashConfig(nodes, subscriptionData);
@@ -64,7 +64,7 @@ describe('clash generator', () => {
   it('should use custom base config', async () => {
     const subscriptionData: SubscriptionData = {
       links: [],
-      template: 'minimal',
+      template: 'blacklist',
       client: 'clash',
       baseConfig: {
         mixedPort: 7891,
@@ -86,7 +86,7 @@ describe('clash generator', () => {
   it('should use custom DNS config', async () => {
     const subscriptionData: SubscriptionData = {
       links: [],
-      template: 'minimal',
+      template: 'blacklist',
       client: 'clash',
       dnsOptions: {
         enable: false,
@@ -122,7 +122,7 @@ describe('clash generator', () => {
     };
     const subscriptionData: SubscriptionData = {
       links: [],
-      template: 'minimal',
+      template: 'blacklist',
       client: 'clash',
     };
     const config = await generateClashConfig([realityNode], subscriptionData);
@@ -152,7 +152,7 @@ describe('clash generator', () => {
     };
     const subscriptionData: SubscriptionData = {
       links: [],
-      template: 'minimal',
+      template: 'blacklist',
       client: 'clash',
     };
     const config = await generateClashConfig([grpcNode], subscriptionData);
@@ -175,7 +175,7 @@ describe('clash generator', () => {
     };
     const subscriptionData: SubscriptionData = {
       links: [],
-      template: 'minimal',
+      template: 'blacklist',
       client: 'clash',
     };
     const config = await generateClashConfig([insecureNode], subscriptionData);

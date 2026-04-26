@@ -31,7 +31,7 @@ describe('functions/api/sub', () => {
   it('returns 400 when no valid links decode', async () => {
     const data: SubscriptionData = {
       links: ['not-a-vless-link'],
-      template: 'pure',
+      template: 'blacklist',
       client: 'clash',
     };
     const encoded = encodeSubscriptionData(data);
@@ -44,7 +44,7 @@ describe('functions/api/sub', () => {
   it('returns yaml with 200 for a valid vless link', async () => {
     const data: SubscriptionData = {
       links: ['vless://uuid@example.com:443?encryption=none#TestNode'],
-      template: 'pure',
+      template: 'blacklist',
       client: 'clash',
     };
     const encoded = encodeSubscriptionData(data);
@@ -64,7 +64,7 @@ describe('functions/api/sub', () => {
         'vless://uuid@example.com:443?encryption=none#ValidNode',
         'not-a-vless-link',
       ],
-      template: 'pure',
+      template: 'blacklist',
       client: 'clash',
     };
     const encoded = encodeSubscriptionData(data);
