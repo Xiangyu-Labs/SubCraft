@@ -6,7 +6,7 @@ function vlessToShadowrocketProxy(node: VlessNode): string {
     node.name + ' = vless',
     node.server,
     String(node.port),
-    'uuid=' + node.uuid,
+    'password=' + node.uuid,
   ];
 
   if (node.tls) {
@@ -15,7 +15,7 @@ function vlessToShadowrocketProxy(node: VlessNode): string {
       parts.push('skip-cert-verify=true');
     }
     if (node.sni) {
-      parts.push('servername=' + node.sni);
+      parts.push('peer=' + node.sni);
     }
   }
 

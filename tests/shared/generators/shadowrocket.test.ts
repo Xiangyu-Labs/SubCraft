@@ -42,7 +42,7 @@ describe('shadowrocket generator', () => {
     };
     const config = await generateShadowrocketConfig(nodes, subscriptionData);
 
-    expect(config).toContain('TlsNode = vless, host.com, 443, uuid=uuid-tls, tls=true, servername=sni.com');
+    expect(config).toContain('TlsNode = vless, host.com, 443, password=uuid-tls, tls=true, peer=sni.com');
   });
 
   it('should include vless with reality', async () => {
@@ -67,7 +67,7 @@ describe('shadowrocket generator', () => {
     };
     const config = await generateShadowrocketConfig(nodes, subscriptionData);
 
-    expect(config).toContain('RealityNode = vless, vps.com, 54939, uuid=uuid-r, tls=true, servername=apple.com');
+    expect(config).toContain('RealityNode = vless, vps.com, 54939, password=uuid-r, tls=true, peer=apple.com');
     expect(config).toContain('client-fingerprint=chrome');
   });
 
@@ -113,7 +113,7 @@ describe('shadowrocket generator', () => {
     };
     const config = await generateShadowrocketConfig(nodes, subscriptionData);
 
-    expect(config).toContain('GrpcNode = vless, grpc.com, 443, uuid=uuid-g');
+    expect(config).toContain('GrpcNode = vless, grpc.com, 443, password=uuid-g');
     expect(config).toContain('grpc=true');
     expect(config).toContain('grpc-service-name=MyService');
   });
