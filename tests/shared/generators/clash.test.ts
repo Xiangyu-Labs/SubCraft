@@ -138,4 +138,47 @@ describe('clash generator', () => {
       'short-id': 'sid456',
     });
   });
+
+  it('should generate grpc vless proxy', async () => {
+    const grpcNode: VlessNode = {
+      name: 'GrpcNode',
+      server: 'host.com',
+      port: 443,
+      uuid: 'uuid-789',
+      network: 'grpc',
+      tls: true,
+      sni: 'host.com',
+      serviceName: 'MyService',
+    };
+    const subscriptionData: SubscriptionData = {
+      links: [],
+      template: 'minimal',
+      client: 'clash',
+    };
+    const config = await generateClashConfig([grpcNode], subscriptionData);
+
+    const proxy = config.proxies[0];
+    expect(proxy.network).toBe('grpc');
+    expect(proxy['grpc-opts']).toEqual({
+      'grpc-service-name': 'MyService',
+    });
+  });
+
+  it('should set skip-cert-verify from allowInsecure', async () => {
+    const insecureNode: VlessNode = {
+      name: 'InsecureNode',
+      server: 'host.com',
+      port: 443,
+      uuid: 'uuid-000',
+      tls: true,
+      allowInsecure: true,
+    };
+    const subscriptionData: SubscriptionData = {
+      links: [],
+      template: 'minimal',
+      client: 'clash',
+    };
+    const config = await generateClashConfig([insecureNode], subscriptionData);
+    expect(config.proxies[0]['skip-cert-verify']).toBe(true);
+  });
 });

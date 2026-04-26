@@ -35,6 +35,12 @@ export function parseVlessLink(link: string): VlessNode {
       node.shortId = params.get('sid') || undefined;
     }
 
+    // 允许不安全连接
+    const allowInsecure = params.get('allowInsecure');
+    if (allowInsecure === '1' || allowInsecure === 'true') {
+      node.allowInsecure = true;
+    }
+
     // 解析传输协议
     const type = params.get('type');
     if (type) {
@@ -43,6 +49,9 @@ export function parseVlessLink(link: string): VlessNode {
     if (type === 'ws') {
       node.wsPath = params.get('path') || '/';
       node.wsHost = params.get('host') || undefined;
+    }
+    if (type === 'grpc') {
+      node.serviceName = params.get('serviceName') || undefined;
     }
 
     // 解析 flow

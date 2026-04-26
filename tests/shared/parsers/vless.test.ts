@@ -38,6 +38,21 @@ describe('vless parser', () => {
     expect(node.shortId).toBe('short-id');
   });
 
+  it('should parse allowInsecure flag', () => {
+    const link =
+      'vless://uuid@host:443?security=tls&sni=example.com&allowInsecure=1#Node';
+    const node = parseVlessLink(link);
+    expect(node.allowInsecure).toBe(true);
+  });
+
+  it('should parse grpc serviceName', () => {
+    const link =
+      'vless://uuid@host:443?type=grpc&serviceName=MyService&security=tls#Node';
+    const node = parseVlessLink(link);
+    expect(node.network).toBe('grpc');
+    expect(node.serviceName).toBe('MyService');
+  });
+
   it('should throw error for invalid link', () => {
     expect(() => parseVlessLink('invalid')).toThrow();
     expect(() => parseVlessLink('vmess://test')).toThrow();

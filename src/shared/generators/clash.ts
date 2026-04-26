@@ -95,7 +95,7 @@ function vlessToClashProxy(node: VlessNode): ClashProxy {
 
   if (node.tls) {
     proxy.tls = true;
-    proxy['skip-cert-verify'] = false;
+    proxy['skip-cert-verify'] = node.allowInsecure ?? false;
     if (node.sni) {
       proxy.servername = node.sni;
     }
@@ -123,6 +123,12 @@ function vlessToClashProxy(node: VlessNode): ClashProxy {
         Host: node.wsHost,
       };
     }
+  }
+
+  if (node.network === 'grpc' && node.serviceName) {
+    proxy['grpc-opts'] = {
+      'grpc-service-name': node.serviceName,
+    };
   }
 
   return proxy;

@@ -53,6 +53,9 @@ export interface VlessNode {
   fingerprint?: string;
   publicKey?: string;
   shortId?: string;
+  // 其他
+  allowInsecure?: boolean;
+  serviceName?: string;
 }
 
 // Clash 代理节点
@@ -72,6 +75,10 @@ export interface ClashProxy {
   'reality-opts'?: {
     'public-key': string;
     'short-id'?: string;
+  };
+  'grpc-opts'?: {
+    'grpc-service-name'?: string;
+    'grpc-mode'?: string;
   };
   'ws-opts'?: {
     path?: string;
