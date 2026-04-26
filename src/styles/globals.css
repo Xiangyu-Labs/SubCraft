@@ -1,0 +1,170 @@
+@import "tailwindcss/index.css";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ========================================
+   Theme System
+   ======================================== */
+
+/* --- Modern (Default) Light --- */
+:root {
+  /* Colors */
+  --primary: #10a37f;
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface2: #f7f7f8;
+  --text: #343541;
+  --muted: #71717a;
+  --border: #e5e5e5;
+  --ring: #10a37f;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+
+  /* Typography */
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+
+  /* Radius */
+  --radius: 8px;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Shadcn Mappings */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface);
+  --popover-foreground: var(--text);
+  --primary-foreground: #ffffff;
+  --secondary: var(--surface2);
+  --secondary-foreground: var(--text);
+  --muted-foreground: #8e8ea0;
+  --accent: var(--surface2);
+  --accent-foreground: var(--text);
+  --destructive: var(--danger);
+  --destructive-foreground: #ffffff;
+  --input: var(--surface);
+}
+
+/* --- Modern Dark --- */
+:root.dark {
+  --bg: #343541;
+  --surface: #444654;
+  --surface2: #202123;
+  --text: #ececf1;
+  --muted: #8e8ea0;
+  --border: #565869;
+  --muted-foreground: #a0a0b0;
+}
+
+/* --- Anthropic Light --- */
+:root[data-theme="anthropic"] {
+  --primary: #d97757;
+  --bg: #faf9f5;
+  --surface: #ffffff;
+  --surface2: #e8e6dc;
+  --text: #141413;
+  --muted: #b0aea5;
+  --border: #e8e6dc;
+  --ring: #d97757;
+  --danger: #c45c4a;
+  --warning: #d4a27f;
+  --info: #6a9bcc;
+
+  --font-sans: "Space Grotesk", "DM Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", Consolas, monospace;
+
+  --radius: 6px;
+}
+
+/* --- Anthropic Dark --- */
+:root[data-theme="anthropic"].dark {
+  --bg: #141413;
+  --surface: #1a1a19;
+  --surface2: #2a2a28;
+  --text: #ececf1;
+  --muted: #8a8880;
+  --border: #3a3a38;
+  --muted-foreground: #9a9890;
+}
+
+/* ========================================
+   Base Styles
+   ======================================== */
+
+html {
+  background-color: var(--bg);
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+@theme {
+  --color-primary: var(--primary);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface2: var(--surface2);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
