@@ -24,7 +24,8 @@ export function SubscriptionForm() {
       const linkArray = links
         .split('\n')
         .map(l => l.trim())
-        .filter(l => l.length > 0);
+        .filter(l => l.length > 0)
+        .map(l => l.replace(/@(https?:\/\/)/, '@'));
 
       if (linkArray.length === 0) {
         setError('请至少输入一个代理链接');
@@ -53,7 +54,10 @@ export function SubscriptionForm() {
         },
       });
 
-      const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+      let baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+      if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+        baseUrl = 'https://' + baseUrl;
+      }
       const url = `${baseUrl}/api/sub?data=${encoded}`;
       setSubscriptionUrl(url);
     } catch (err) {
