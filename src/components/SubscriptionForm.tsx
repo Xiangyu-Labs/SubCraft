@@ -5,7 +5,7 @@ import type { RuleTemplate } from '@/shared/types';
 
 export function SubscriptionForm() {
   const [links, setLinks] = useState('');
-  const [template, setTemplate] = useState<RuleTemplate>('balanced');
+  const [template, setTemplate] = useState<RuleTemplate>('blacklist');
   const [subscriptionUrl, setSubscriptionUrl] = useState('');
   const [error, setError] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);

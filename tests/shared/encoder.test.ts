@@ -5,7 +5,7 @@ import type { SubscriptionData } from '@/shared/types';
 describe('encoder', () => {
   const testData: SubscriptionData = {
     links: ['vless://test@example.com:443?encryption=none#TestNode'],
-    template: 'balanced',
+    template: 'blacklist',
     client: 'clash',
   };
 
@@ -20,7 +20,7 @@ describe('encoder', () => {
   it('should handle multiple links', () => {
     const data: SubscriptionData = {
       links: ['vless://1@host1:443#Node1', 'vless://2@host2:443#Node2'],
-      template: 'minimal',
+      template: 'blacklist',
       client: 'clash',
     };
     const encoded = encodeSubscriptionData(data);
