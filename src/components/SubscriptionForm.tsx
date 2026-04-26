@@ -66,7 +66,7 @@ export function SubscriptionForm() {
     try {
       await navigator.clipboard.writeText(subscriptionUrl);
       alert('已复制到剪贴板');
-    } catch (err) {
+    } catch {
       alert('复制失败，请手动复制');
     }
   };

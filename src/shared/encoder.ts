@@ -40,7 +40,7 @@ export function decodeSubscriptionData(encoded: string): SubscriptionData {
     const compressed = base64UrlToUint8Array(encoded);
     const json = pako.ungzip(compressed, { to: 'string' });
     return JSON.parse(json) as SubscriptionData;
-  } catch (error) {
+  } catch {
     throw new Error('Invalid encoded data');
   }
 }

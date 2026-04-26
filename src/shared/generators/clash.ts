@@ -1,4 +1,4 @@
-import type { VlessNode, ClashConfig, ClashProxy, RuleTemplate as RuleTemplateType, SubscriptionData, ClashBaseConfig, ClashDNSOptions, ClashDNSConfig } from '../types';
+import type { VlessNode, ClashConfig, ClashProxy, SubscriptionData, ClashBaseConfig, ClashDNSOptions, ClashDNSConfig } from '../types';
 import { ruleTemplates } from '../rules';
 import { fetchRules } from './rules-fetcher';
 
