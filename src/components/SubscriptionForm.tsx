@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import QRCode from 'qrcode';
 import { encodeSubscriptionData } from '@/shared/encoder';
 import { ruleTemplates } from '@/shared/rules';
+import { showToast } from '@/lib/toast';
 import type { RuleTemplate, ClientType } from '@/shared/types';
 
 export function SubscriptionForm() {
@@ -8,10 +10,21 @@ export function SubscriptionForm() {
   const [template, setTemplate] = useState<RuleTemplate>('blacklist');
   const [client, setClient] = useState<ClientType>('clash');
   const [subscriptionUrl, setSubscriptionUrl] = useState('');
+  const [qrDataUrl, setQrDataUrl] = useState('');
   const [error, setError] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [mixedPort, setMixedPort] = useState(7890);
   const [mode, setMode] = useState<'rule' | 'global' | 'direct'>('rule');
+
+  useEffect(() => {
+    if (client === 'shadowrocket' && subscriptionUrl) {
+      QRCode.toDataURL(subscriptionUrl, { margin: 2, width: 200 })
+        .then(setQrDataUrl)
+        .catch(() => setQrDataUrl(''));
+    } else {
+      setQrDataUrl('');
+    }
+  }, [client, subscriptionUrl]);
 
   const handleGenerate = () => {
     try {
@@ -65,9 +78,9 @@ export function SubscriptionForm() {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(subscriptionUrl);
-      alert('已复制到剪贴板');
+      showToast('已复制到剪贴板');
     } catch {
-      alert('复制失败，请手动复制');
+      showToast('复制失败，请手动复制', 'error');
     }
   };
 
@@ -189,7 +202,7 @@ export function SubscriptionForm() {
       </button>
 
       {subscriptionUrl && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <label className="text-sm font-medium">订阅链接</label>
           <div className="flex gap-2">
             <input
@@ -213,6 +226,17 @@ export function SubscriptionForm() {
               复制
             </button>
           </div>
+          {qrDataUrl && (
+            <div className="flex flex-col items-center gap-2 rounded-lg border p-4" style={{ borderColor: 'var(--border)' }}>
+              <img
+                src={qrDataUrl}
+                alt="订阅二维码"
+                className="rounded-md"
+                style={{ width: 200, height: 200 }}
+              />
+              <p className="text-xs text-muted-foreground">用 Shadowrocket 扫描上方二维码添加订阅</p>
+            </div>
+          )}
           <p className="text-xs text-muted-foreground">
             将链接添加到 {client === 'clash' ? 'Clash' : 'Shadowrocket'} 客户端即可使用
           </p>

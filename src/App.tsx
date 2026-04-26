@@ -1,9 +1,11 @@
 import { SubscriptionForm } from './components/SubscriptionForm';
 import { ThemeSwitcher } from './components/ThemeSwitcher';
+import { Toaster } from './components/Toaster';
 
 export function App() {
   return (
     <>
+      <Toaster />
       <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-6">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-semibold">SubCraft</h1>
