@@ -12,7 +12,7 @@
     "skipLibCheck": true,
     "noEmit": true,
     "allowSyntheticDefaultImports": true,
-    "types": ["@cloudflare/workers-types", "node", "vite/client"],
+    "types": ["@cloudflare/workers-types", "node", "vite/client", "vitest/globals"],
     "paths": {
       "@/*": ["./src/*"]
     }
