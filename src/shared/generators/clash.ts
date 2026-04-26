@@ -89,6 +89,10 @@ function vlessToClashProxy(node: VlessNode): ClashProxy {
     uuid: node.uuid,
   };
 
+  if (node.network) {
+    proxy.network = node.network;
+  }
+
   if (node.tls) {
     proxy.tls = true;
     proxy['skip-cert-verify'] = false;
@@ -97,8 +101,20 @@ function vlessToClashProxy(node: VlessNode): ClashProxy {
     }
   }
 
+  if (node.fingerprint) {
+    proxy['client-fingerprint'] = node.fingerprint;
+  }
+
+  if (node.publicKey) {
+    proxy['reality-opts'] = {
+      'public-key': node.publicKey,
+    };
+    if (node.shortId) {
+      proxy['reality-opts']['short-id'] = node.shortId;
+    }
+  }
+
   if (node.network === 'ws') {
-    proxy.network = 'ws';
     proxy['ws-opts'] = {
       path: node.wsPath || '/',
     };

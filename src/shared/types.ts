@@ -49,6 +49,10 @@ export interface VlessNode {
   flow?: string;
   wsPath?: string;
   wsHost?: string;
+  // Reality 协议
+  fingerprint?: string;
+  publicKey?: string;
+  shortId?: string;
 }
 
 // Clash 代理节点
@@ -64,6 +68,11 @@ export interface ClashProxy {
   tls?: boolean;
   'skip-cert-verify'?: boolean;
   servername?: string;
+  'client-fingerprint'?: string;
+  'reality-opts'?: {
+    'public-key': string;
+    'short-id'?: string;
+  };
   'ws-opts'?: {
     path?: string;
     headers?: Record<string, string>;

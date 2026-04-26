@@ -106,4 +106,36 @@ describe('clash generator', () => {
     expect(config.dns['fake-ip-range']).toBe('198.19.0.1/16');
     expect(config.dns['fake-ip-filter']).toContain('*.custom.local');
   });
+
+  it('should generate reality vless proxy', async () => {
+    const realityNode: VlessNode = {
+      name: 'RealityNode',
+      server: 'vps.example.com',
+      port: 54939,
+      uuid: 'uuid-456',
+      network: 'tcp',
+      tls: true,
+      sni: 'apple.com',
+      fingerprint: 'chrome',
+      publicKey: 'abc123pub',
+      shortId: 'sid456',
+    };
+    const subscriptionData: SubscriptionData = {
+      links: [],
+      template: 'minimal',
+      client: 'clash',
+    };
+    const config = await generateClashConfig([realityNode], subscriptionData);
+
+    const proxy = config.proxies[0];
+    expect(proxy.type).toBe('vless');
+    expect(proxy.network).toBe('tcp');
+    expect(proxy.tls).toBe(true);
+    expect(proxy.servername).toBe('apple.com');
+    expect(proxy['client-fingerprint']).toBe('chrome');
+    expect(proxy['reality-opts']).toEqual({
+      'public-key': 'abc123pub',
+      'short-id': 'sid456',
+    });
+  });
 });

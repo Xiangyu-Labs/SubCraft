@@ -29,10 +29,18 @@ export function parseVlessLink(link: string): VlessNode {
       node.alpn = params.get('alpn') || undefined;
     }
 
+    if (security === 'reality') {
+      node.fingerprint = params.get('fp') || undefined;
+      node.publicKey = params.get('pbk') || undefined;
+      node.shortId = params.get('sid') || undefined;
+    }
+
     // 解析传输协议
     const type = params.get('type');
+    if (type) {
+      node.network = type;
+    }
     if (type === 'ws') {
-      node.network = 'ws';
       node.wsPath = params.get('path') || '/';
       node.wsHost = params.get('host') || undefined;
     }
