@@ -1,14 +1,35 @@
-import next from "eslint-config-next";
+import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
+import globals from 'globals';
 
-/** @type {import('eslint').Linter.Config[]} */
-const eslintConfig = [
-  ...next,
+export default tseslint.config(
   {
+    ignores: ['dist', '.wrangler', 'node_modules'],
+  },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    files: ['src/**/*.{ts,tsx}', 'functions/**/*.ts'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: { ...globals.browser, ...globals.node },
+    },
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+    },
     rules: {
-      // App Router uses <link> in layout.tsx for fonts, not pages/_document.js
-      "@next/next/no-page-custom-font": "off",
+      ...reactHooks.configs.recommended.rules,
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowConstantExport: true },
+      ],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_' },
+      ],
     },
   },
-];
-
-export default eslintConfig;
+);
