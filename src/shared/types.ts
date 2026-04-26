@@ -5,7 +5,7 @@ export type ProxyProtocol = 'vless' | 'vmess' | 'trojan' | 'ss';
 export type RuleTemplate = 'blacklist' | 'blacklist-adguard' | 'whitelist' | 'whitelist-adguard';
 
 // 客户端类型
-export type ClientType = 'clash';
+export type ClientType = 'clash' | 'shadowrocket';
 
 // Clash 基础配置选项
 export interface ClashBaseConfig {
@@ -117,22 +117,6 @@ export interface ClashConfig {
     proxies: string[];
   }>;
   rules: string[];
-}
-
-// Shadowrocket 代理节点
-export interface ShadowrocketProxy {
-  name: string;
-  type: string;
-  server: string;
-  port: number;
-  uuid: string;
-  tls?: boolean;
-  'skip-cert-verify'?: boolean;
-  servername?: string;
-  'client-fingerprint'?: string;
-  network?: string;
-  'ws-path'?: string;
-  'ws-headers'?: string;
 }
 
 // Shadowrocket 配置（输出为纯文本 .conf）

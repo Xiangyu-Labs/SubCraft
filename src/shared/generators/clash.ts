@@ -1,5 +1,6 @@
 import type { VlessNode, ClashConfig, ClashProxy, RuleTemplate as RuleTemplateType, SubscriptionData, ClashBaseConfig, ClashDNSOptions, ClashDNSConfig } from '../types';
 import { ruleTemplates } from '../rules';
+import { fetchRules } from './rules-fetcher';
 
 // 默认基础配置
 const DEFAULT_BASE_CONFIG: ClashBaseConfig = {
@@ -132,38 +133,6 @@ function vlessToClashProxy(node: VlessNode): ClashProxy {
   }
 
   return proxy;
-}
-
-// 下载并解析规则文件
-async function fetchRules(url: string): Promise<string[]> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch rules from ${url}: ${response.statusText}`);
-  }
-
-  const text = await response.text();
-  const lines = text.split('\n');
-
-  // 解析 YAML payload 格式
-  const rules: string[] = [];
-  let inPayload = false;
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (trimmed === 'payload:') {
-      inPayload = true;
-      continue;
-    }
-    if (inPayload && trimmed.startsWith('- ')) {
-      // 移除前缀 "- " 和引号
-      let domain = trimmed.slice(2).replace(/^['"]|['"]$/g, '');
-      // 移除 +. 前缀（Clash DOMAIN-SUFFIX 规则不需要这个）
-      domain = domain.replace(/^\+\./, '');
-      rules.push(domain);
-    }
-  }
-
-  return rules;
 }
 
 export async function generateClashConfig(

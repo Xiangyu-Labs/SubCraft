@@ -19,7 +19,7 @@ describe('shadowrocket generator', () => {
     const subscriptionData: SubscriptionData = {
       links: [],
       template: 'blacklist',
-      client: 'clash',
+      client: 'shadowrocket',
     };
     const config = await generateShadowrocketConfig(testNodes, subscriptionData);
 
@@ -38,7 +38,7 @@ describe('shadowrocket generator', () => {
     const subscriptionData: SubscriptionData = {
       links: [],
       template: 'blacklist',
-      client: 'clash',
+      client: 'shadowrocket',
     };
     const config = await generateShadowrocketConfig(nodes, subscriptionData);
 
@@ -63,7 +63,7 @@ describe('shadowrocket generator', () => {
     const subscriptionData: SubscriptionData = {
       links: [],
       template: 'blacklist',
-      client: 'clash',
+      client: 'shadowrocket',
     };
     const config = await generateShadowrocketConfig(nodes, subscriptionData);
 
@@ -86,7 +86,7 @@ describe('shadowrocket generator', () => {
     const subscriptionData: SubscriptionData = {
       links: [],
       template: 'blacklist',
-      client: 'clash',
+      client: 'shadowrocket',
     };
     const config = await generateShadowrocketConfig(nodes, subscriptionData);
 
@@ -109,10 +109,12 @@ describe('shadowrocket generator', () => {
     const subscriptionData: SubscriptionData = {
       links: [],
       template: 'blacklist',
-      client: 'clash',
+      client: 'shadowrocket',
     };
     const config = await generateShadowrocketConfig(nodes, subscriptionData);
 
     expect(config).toContain('GrpcNode = vless, grpc.com, 443, uuid=uuid-g');
+    expect(config).toContain('grpc=true');
+    expect(config).toContain('grpc-service-name=MyService');
   });
 });
