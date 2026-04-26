@@ -2,7 +2,15 @@
 export type ProxyProtocol = 'vless' | 'vmess' | 'trojan' | 'ss';
 
 // 规则模板 ID
-export type RuleTemplate = 'blacklist' | 'blacklist-adguard' | 'whitelist' | 'whitelist-adguard';
+export type RuleTemplate =
+  | 'blacklist'
+  | 'blacklist-adguard'
+  | 'whitelist'
+  | 'whitelist-adguard'
+  | 'reverse-blacklist'
+  | 'reverse-blacklist-adguard'
+  | 'reverse-whitelist'
+  | 'reverse-whitelist-adguard';
 
 // 客户端类型
 export type ClientType = 'clash' | 'shadowrocket';

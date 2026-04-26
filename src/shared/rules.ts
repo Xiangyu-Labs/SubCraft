@@ -66,4 +66,64 @@ export const ruleTemplates: Record<string, RuleTemplate> = {
       'MATCH,PROXY',
     ],
   },
+
+  'reverse-blacklist': {
+    id: 'reverse-blacklist',
+    name: '回国黑名单',
+    description: '仅代理国内网站回国，其余海外直连',
+    ruleUrls: {
+      direct: 'https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt',
+    },
+    rules: [
+      'RULE-SET,direct,PROXY',
+      'GEOIP,CN,PROXY',
+      'MATCH,DIRECT',
+    ],
+  },
+
+  'reverse-blacklist-adguard': {
+    id: 'reverse-blacklist-adguard',
+    name: '回国黑名单 + AdGuard',
+    description: '仅代理国内网站回国 + 广告拦截',
+    ruleUrls: {
+      reject: 'https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt',
+      direct: 'https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt',
+    },
+    rules: [
+      'RULE-SET,reject,REJECT',
+      'RULE-SET,direct,PROXY',
+      'GEOIP,CN,PROXY',
+      'MATCH,DIRECT',
+    ],
+  },
+
+  'reverse-whitelist': {
+    id: 'reverse-whitelist',
+    name: '回国白名单',
+    description: '仅海外直连，其余代理回国',
+    ruleUrls: {
+      proxy: 'https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt',
+    },
+    rules: [
+      'RULE-SET,proxy,DIRECT',
+      'GEOIP,CN,PROXY',
+      'MATCH,PROXY',
+    ],
+  },
+
+  'reverse-whitelist-adguard': {
+    id: 'reverse-whitelist-adguard',
+    name: '回国白名单 + AdGuard',
+    description: '仅海外直连 + 广告拦截',
+    ruleUrls: {
+      reject: 'https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt',
+      proxy: 'https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt',
+    },
+    rules: [
+      'RULE-SET,reject,REJECT',
+      'RULE-SET,proxy,DIRECT',
+      'GEOIP,CN,PROXY',
+      'MATCH,PROXY',
+    ],
+  },
 };

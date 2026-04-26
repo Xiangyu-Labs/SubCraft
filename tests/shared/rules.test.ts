@@ -2,10 +2,14 @@ import { describe, it, expect } from 'vitest';
 import { ruleTemplates } from '@/shared/rules';
 
 describe('ruleTemplates', () => {
-  it('exposes the four expected templates', () => {
+  it('exposes the eight expected templates', () => {
     expect(Object.keys(ruleTemplates).sort()).toEqual([
       'blacklist',
       'blacklist-adguard',
+      'reverse-blacklist',
+      'reverse-blacklist-adguard',
+      'reverse-whitelist',
+      'reverse-whitelist-adguard',
       'whitelist',
       'whitelist-adguard',
     ]);
