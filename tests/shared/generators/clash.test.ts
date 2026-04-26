@@ -116,9 +116,11 @@ describe('clash generator', () => {
       network: 'tcp',
       tls: true,
       sni: 'apple.com',
+      alpn: 'h2,http/1.1',
       fingerprint: 'chrome',
       publicKey: 'abc123pub',
       shortId: 'sid456',
+      flow: 'xtls-rprx-vision',
     };
     const subscriptionData: SubscriptionData = {
       links: [],
@@ -132,7 +134,9 @@ describe('clash generator', () => {
     expect(proxy.network).toBe('tcp');
     expect(proxy.tls).toBe(true);
     expect(proxy.servername).toBe('apple.com');
+    expect(proxy.alpn).toEqual(['h2', 'http/1.1']);
     expect(proxy['client-fingerprint']).toBe('chrome');
+    expect(proxy.flow).toBe('xtls-rprx-vision');
     expect(proxy['reality-opts']).toEqual({
       'public-key': 'abc123pub',
       'short-id': 'sid456',

@@ -100,10 +100,17 @@ function vlessToClashProxy(node: VlessNode): ClashProxy {
     if (node.sni) {
       proxy.servername = node.sni;
     }
+    if (node.alpn) {
+      proxy.alpn = node.alpn.split(',');
+    }
   }
 
   if (node.fingerprint) {
     proxy['client-fingerprint'] = node.fingerprint;
+  }
+
+  if (node.flow) {
+    proxy.flow = node.flow;
   }
 
   if (node.publicKey) {

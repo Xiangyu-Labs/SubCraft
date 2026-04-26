@@ -33,7 +33,7 @@ describe('shadowrocket generator', () => {
 
   it('should include vless with tls', async () => {
     const nodes: VlessNode[] = [
-      { name: 'TlsNode', server: 'host.com', port: 443, uuid: 'uuid-tls', tls: true, sni: 'sni.com' },
+      { name: 'TlsNode', server: 'host.com', port: 443, uuid: 'uuid-tls', tls: true, sni: 'sni.com', alpn: 'h2,http/1.1' },
     ];
     const subscriptionData: SubscriptionData = {
       links: [],
@@ -42,7 +42,36 @@ describe('shadowrocket generator', () => {
     };
     const config = await generateShadowrocketConfig(nodes, subscriptionData);
 
-    expect(config).toContain('TlsNode = vless, host.com, 443, password=uuid-tls, tls=true, peer=sni.com');
+    expect(config).toContain('TlsNode = vless, host.com, 443, password=uuid-tls, tls=true, peer=sni.com, alpn=h2,http/1.1');
+  });
+
+  it('should include skip-cert-verify when allowInsecure is true', async () => {
+    const nodes: VlessNode[] = [
+      { name: 'InsecureNode', server: 'host.com', port: 443, uuid: 'uuid-i', tls: true, allowInsecure: true },
+    ];
+    const subscriptionData: SubscriptionData = {
+      links: [],
+      template: 'blacklist',
+      client: 'shadowrocket',
+    };
+    const config = await generateShadowrocketConfig(nodes, subscriptionData);
+
+    expect(config).toContain('InsecureNode = vless, host.com, 443, password=uuid-i, tls=true, skip-cert-verify=true');
+  });
+
+  it('should include vless without tls', async () => {
+    const nodes: VlessNode[] = [
+      { name: 'PlainNode', server: 'host.com', port: 80, uuid: 'uuid-p' },
+    ];
+    const subscriptionData: SubscriptionData = {
+      links: [],
+      template: 'blacklist',
+      client: 'shadowrocket',
+    };
+    const config = await generateShadowrocketConfig(nodes, subscriptionData);
+
+    expect(config).toContain('PlainNode = vless, host.com, 80, password=uuid-p');
+    expect(config).not.toContain('tls=true');
   });
 
   it('should include vless with reality', async () => {
@@ -69,6 +98,8 @@ describe('shadowrocket generator', () => {
 
     expect(config).toContain('RealityNode = vless, vps.com, 54939, password=uuid-r, tls=true, peer=apple.com');
     expect(config).toContain('client-fingerprint=chrome');
+    expect(config).toContain('pbk=pk123');
+    expect(config).toContain('sid=sid456');
   });
 
   it('should include ws opts', async () => {

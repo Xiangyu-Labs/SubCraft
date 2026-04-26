@@ -17,10 +17,25 @@ function vlessToShadowrocketProxy(node: VlessNode): string {
     if (node.sni) {
       parts.push('peer=' + node.sni);
     }
+    if (node.alpn) {
+      parts.push('alpn=' + node.alpn);
+    }
   }
 
   if (node.fingerprint) {
     parts.push('client-fingerprint=' + node.fingerprint);
+  }
+
+  if (node.publicKey) {
+    parts.push('pbk=' + node.publicKey);
+  }
+
+  if (node.shortId) {
+    parts.push('sid=' + node.shortId);
+  }
+
+  if (node.flow) {
+    parts.push('flow=' + node.flow);
   }
 
   if (node.network === 'ws') {

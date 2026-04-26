@@ -79,7 +79,9 @@ export interface ClashProxy {
   tls?: boolean;
   'skip-cert-verify'?: boolean;
   servername?: string;
+  alpn?: string[];
   'client-fingerprint'?: string;
+  flow?: string;
   'reality-opts'?: {
     'public-key': string;
     'short-id'?: string;
