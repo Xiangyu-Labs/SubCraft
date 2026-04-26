@@ -83,7 +83,7 @@ describe('functions/api/sub', () => {
       makeContext(`https://app.test/api/sub?data=${oversized}`),
     );
     expect(res.status).toBe(400);
-    const json = await res.json();
+    const json = await res.json() as { error: string };
     expect(json.error).toBe('Data too large');
   });
 });
