@@ -2,6 +2,7 @@ import yaml from 'js-yaml';
 import { decodeSubscriptionData } from '@/shared/encoder';
 import { parseVlessLink } from '@/shared/parsers/vless';
 import { generateClashConfig } from '@/shared/generators/clash';
+import { generateShadowrocketConfig } from '@/shared/generators/shadowrocket';
 import type { VlessNode } from '@/shared/types';
 
 export const onRequestGet: PagesFunction = async (context) => {
@@ -53,6 +54,19 @@ export const onRequestGet: PagesFunction = async (context) => {
   }
 
   try {
+    if (subscriptionData.client === 'shadowrocket') {
+      const config = await generateShadowrocketConfig(nodes, subscriptionData);
+      return new Response(config, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Content-Disposition': 'attachment; filename=shadowrocket.conf',
+          'Subscription-Userinfo': 'upload=0; download=0; total=0; expire=0',
+        },
+      });
+    }
+
+    // default: clash
     const clashConfig = await generateClashConfig(nodes, subscriptionData);
     const body = yaml.dump(clashConfig, { lineWidth: -1, noRefs: true });
 

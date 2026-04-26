@@ -86,4 +86,21 @@ describe('functions/api/sub', () => {
     const json = await res.json() as { error: string };
     expect(json.error).toBe('Data too large');
   });
+
+  it('returns shadowrocket conf with 200 for shadowrocket client', async () => {
+    const data: SubscriptionData = {
+      links: ['vless://uuid@example.com:443?encryption=none#TestNode'],
+      template: 'blacklist',
+      client: 'shadowrocket',
+    };
+    const encoded = encodeSubscriptionData(data);
+    const res = await onRequestGet(
+      makeContext(`https://app.test/api/sub?data=${encoded}`),
+    );
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Content-Type')).toMatch(/text\/plain/);
+    const body = await res.text();
+    expect(body).toContain('[General]');
+    expect(body).toContain('TestNode');
+  });
 });
