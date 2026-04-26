@@ -9,7 +9,7 @@
 - 🔌 **多协议支持**：支持 vless、vmess、trojan 等多种协议
 - ⚙️ **自定义规则**：支持配置代理、直连、拦截规则
 - 🎯 **多客户端**：支持 Clash、Surge、Quantumult X 等客户端
-- 🎨 **现代化界面**：基于 Next.js 16 + React 19 + Tailwind CSS v4
+- 🎨 **现代化界面**：基于 Vite 5 + React 19 + Tailwind CSS v4
 
 ## 工作原理
 
@@ -29,10 +29,10 @@
 
 ## 技术栈
 
-- Next.js 16 + React 19 + TypeScript
-- Tailwind CSS v4 + shadcn/ui 组件
-- Docker 部署
-- GitHub Actions CI/CD (GHCR)
+- Vite 5 + React 19 + TypeScript
+- Tailwind CSS v4
+- Cloudflare Pages + Pages Functions
+- Wrangler CLI for deploy
 
 ## 快速开始
 
@@ -58,23 +58,22 @@ cp .env.example .env
 编辑 `.env`：
 
 ```
-GITHUB_OWNER=xiangyu-labs
-PROJECT_NAME=subcraft
-IMAGE=ghcr.io/${GITHUB_OWNER}/${PROJECT_NAME}
-DOMAIN=sub.yourdomain.com
-NEXT_PUBLIC_APP_URL=https://${DOMAIN}
-TZ=Asia/Shanghai
+VITE_APP_URL=https://sub.yourdomain.com
 ```
-
-> **注意**：`GITHUB_OWNER` 和 `PROJECT_NAME` 必须全部使用**小写字母**。
 
 ### 4. 本地开发
 
+两个终端分别运行:
+
 ```bash
+# 终端 1：Pages Functions
+npm run dev:functions
+
+# 终端 2：Vite SPA
 npm run dev
 ```
 
-访问 `http://localhost:3000`
+访问 `http://localhost:5173`
 
 ## 使用方法
 
@@ -85,73 +84,64 @@ npm run dev
 5. 复制生成的订阅 URL
 6. 在对应客户端中添加该订阅链接
 
-## Docker 部署
+## Cloudflare Pages 部署
 
-### 本地构建运行
-
-```bash
-docker compose up --build
-```
-
-### 生产部署（带 Traefik + Watchtower）
-
-确保已创建外部网络：
+### 手动部署
 
 ```bash
-docker network create server-internal-net
+npm run build
+npx wrangler pages deploy dist --project-name=subcraft
 ```
 
-部署：
+### 自动部署
 
-```bash
-docker compose up -d
-```
+GitHub Actions 在 main 分支推送时自动 `wrangler pages deploy dist`。
+所需 GitHub Secrets：
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
 
-## CI/CD
-
-GitHub Actions 自动构建并推送 Docker 镜像到 GHCR。
-
-镜像地址：`ghcr.io/xiangyu-labs/subcraft`
-
-### 所需配置
-
-在 GitHub 仓库的 **Settings > Secrets and variables > Actions** 中配置：
-
-- **Variables**: `NEXT_PUBLIC_APP_URL`
-- **Secrets**: `GITHUB_TOKEN`（默认已有）
+GitHub Variables：
+- `VITE_APP_URL`
 
 ## 项目结构
 
 ```
 .
 ├── src/
-│   ├── app/
-│   │   ├── page.tsx              # 首页：输入表单
-│   │   ├── layout.tsx            # 全局布局
-│   │   └── api/
-│   │       ├── generate/         # 生成订阅链接 API
-│   │       └── sub/[encoded]/    # 返回订阅配置 API
+│   ├── main.tsx                  # SPA 入口
+│   ├── App.tsx                   # 根组件
 │   ├── components/
-│   │   └── ui/                   # shadcn/ui 组件
-│   └── lib/
-│       ├── parsers/              # 协议解析器
-│       ├── generators/           # 配置生成器
-│       ├── encoder.ts            # 数据编码/解码
-│       └── rules.ts              # 预设规则
-├── .github/workflows/            # CI/CD
-├── docker-compose.yml
-├── Dockerfile
-└── README.md
+│   │   ├── SubscriptionForm.tsx
+│   │   └── ThemeSwitcher.tsx
+│   ├── lib/                      # 仅前端使用（theme, utils）
+│   ├── shared/                   # 前后端共享
+│   │   ├── encoder.ts
+│   │   ├── parsers/
+│   │   ├── generators/
+│   │   ├── rules.ts
+│   │   └── types.ts
+│   └── styles/globals.css
+├── functions/
+│   └── api/sub.ts                # CF Pages Function
+├── tests/
+├── index.html
+├── vite.config.ts
+├── wrangler.toml
+└── package.json
 ```
 
 ## 脚本
 
 | 命令 | 说明 |
 |------|------|
-| `npm run dev` | 开发服务器 |
-| `npm run build` | 生产构建 |
+| `npm run dev` | Vite SPA 开发服务器 (5173) |
+| `npm run dev:functions` | Pages Functions 服务器 (8788) |
+| `npm run build` | 生产构建到 `dist/` |
+| `npm run preview` | 本地预览生产构建 (3000) |
+| `npm run deploy` | 部署到 Cloudflare Pages |
 | `npm run lint` | ESLint 检查 |
 | `npm run tsc` | TypeScript 类型检查 |
+| `npm test` | 运行 vitest |
 
 ## License
 
