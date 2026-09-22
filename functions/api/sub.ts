@@ -3,6 +3,7 @@ import { decodeSubscriptionData } from '@/shared/encoder';
 import { parseVlessLink } from '@/shared/parsers/vless';
 import { generateClashConfig } from '@/shared/generators/clash';
 import { generateShadowrocketConfig } from '@/shared/generators/shadowrocket';
+import { dedupeNodeNames } from '@/shared/nodes';
 import type { VlessNode } from '@/shared/types';
 
 export const onRequestGet: PagesFunction = async (context) => {
@@ -35,7 +36,7 @@ export const onRequestGet: PagesFunction = async (context) => {
     );
   }
 
-  const nodes: VlessNode[] = subscriptionData.links
+  const parsed: VlessNode[] = subscriptionData.links
     .map((link) => {
       try {
         return parseVlessLink(link);
@@ -46,36 +47,50 @@ export const onRequestGet: PagesFunction = async (context) => {
     })
     .filter((n): n is VlessNode => n !== null);
 
-  if (nodes.length === 0) {
+  if (parsed.length === 0) {
     return Response.json(
       { error: 'No valid proxy links found' },
       { status: 400 },
     );
   }
 
+  // 重名会让 Clash 拒绝加载整份配置，两个客户端都要先过这一步
+  const nodes = dedupeNodeNames(parsed);
+
+  const commonHeaders = {
+    'Cache-Control': 'public, max-age=3600',
+    // CMFA 读这个头决定自动更新周期（小时）
+    'Profile-Update-Interval': '24',
+    'Subscription-Userinfo': 'upload=0; download=0; total=0; expire=0',
+  };
+
   try {
     if (subscriptionData.client === 'shadowrocket') {
-      const config = await generateShadowrocketConfig(nodes, subscriptionData);
+      const config = generateShadowrocketConfig(
+        nodes,
+        subscriptionData,
+        url.origin,
+      );
       return new Response(config, {
         status: 200,
         headers: {
+          ...commonHeaders,
           'Content-Type': 'text/plain; charset=utf-8',
           'Content-Disposition': 'attachment; filename=shadowrocket.conf',
-          'Subscription-Userinfo': 'upload=0; download=0; total=0; expire=0',
         },
       });
     }
 
     // default: clash
-    const clashConfig = await generateClashConfig(nodes, subscriptionData);
+    const clashConfig = generateClashConfig(nodes, subscriptionData, url.origin);
     const body = yaml.dump(clashConfig, { lineWidth: -1, noRefs: true });
 
     return new Response(body, {
       status: 200,
       headers: {
+        ...commonHeaders,
         'Content-Type': 'text/yaml; charset=utf-8',
         'Content-Disposition': 'attachment; filename=clash.yaml',
-        'Subscription-Userinfo': 'upload=0; download=0; total=0; expire=0',
       },
     });
   } catch (err) {

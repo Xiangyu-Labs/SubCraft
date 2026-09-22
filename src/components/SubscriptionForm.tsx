@@ -52,15 +52,6 @@ export function SubscriptionForm() {
           logLevel: 'info',
           ipv6: false,
         },
-        dnsOptions: {
-          enable: true,
-          ipv6: false,
-          enhancedMode: 'fake-ip',
-          fakeIpRange: '198.18.0.1/16',
-          fakeIpFilter: ['*.lan', '*.local', '*.localhost'],
-          nameserver: ['119.29.29.29', '223.5.5.5'],
-          fallback: ['tls://1.1.1.1:853', 'tls://8.8.8.8:853', 'https://1.1.1.1/dns-query', 'https://8.8.8.8/dns-query'],
-        },
       });
 
       let baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;

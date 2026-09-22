@@ -6,9 +6,9 @@
 
 - 🔒 **完全无状态**：不存储任何用户数据，所有信息编码在 URL 中
 - 🚀 **实时生成**：动态解析代理链接并生成订阅配置
-- 🔌 **多协议支持**：支持 vless、vmess、trojan 等多种协议
+- 🔌 **协议支持**：目前支持 vless（含 Reality / ws / gRPC）
 - ⚙️ **自定义规则**：支持配置代理、直连、拦截规则
-- 🎯 **多客户端**：支持 Clash、Surge、Quantumult X 等客户端
+- 🎯 **多客户端**：支持 Clash / mihomo（含 ClashMetaForAndroid）与 Shadowrocket
 - 🎨 **现代化界面**：基于 Vite 5 + React 19 + Tailwind CSS v4
 
 ## 工作原理
@@ -18,11 +18,11 @@
     ↓
 前端编码（Base64 + 压缩）
     ↓
-生成订阅 URL: /api/sub/{encoded_data}
+生成订阅 URL: /api/sub?data={encoded_data}
     ↓
 客户端请求该 URL
     ↓
-后端解码 → 解析链接 → 添加规则 → 生成配置
+后端解码 → 解析链接 → 挂载规则集 → 生成配置
     ↓
 返回给客户端
 ```
@@ -78,11 +78,25 @@ npm run dev
 ## 使用方法
 
 1. 在首页输入一个或多个代理链接（每行一个）
-2. 选择目标客户端类型（Clash / Surge / Quantumult X）
+2. 选择目标客户端类型（Clash / Shadowrocket）
 3. 配置代理规则（可选）
 4. 点击"生成订阅链接"
 5. 复制生成的订阅 URL
 6. 在对应客户端中添加该订阅链接
+
+## 生成的配置
+
+规则集不会内联进配置（Loyalsoldier 的三份列表合计超过 30 万条），而是通过
+`rule-providers` 指向本服务的 `/api/ruleset/:name`，由客户端自行下载并每日更新。
+走本服务而不是直连 jsDelivr，是因为 mihomo 首次加载 rule-provider 失败会导致
+整份配置拒绝加载，不能把这一步押在第三方 CDN 的可达性上。
+
+DNS 段刻意**不输出 `fallback`**。mihomo 的语义是：`fallback` 非空时，`nameserver`
+返回的非 CN 结果会被丢弃、强制改用 `fallback` 的答案（`fallback-filter.geoip`
+默认就是 `true`）。境外节点域名必然解析到非 CN IP，于是强依赖 `fallback` 可达 ——
+一旦 DoH/DoT 在当前网络被阻断，节点域名就彻底解析不出来。改由
+`proxy-server-nameserver` 用本地可直连的明文 UDP DNS 解析节点域名，
+方向由规则模板决定（回国模板用境外 DNS）。
 
 ## Cloudflare Pages 部署
 

@@ -10,9 +10,10 @@ export function parseVlessLink(link: string): VlessNode {
     const params = url.searchParams;
 
     const name = decodeURIComponent(url.hash.slice(1)) || 'Unnamed';
-    const server = url.hostname;
+    // IPv6 字面量在 url.hostname 里是带方括号的，写进 Clash 的 server 会非法
+    const server = url.hostname.replace(/^\[|\]$/g, '');
     const port = parseInt(url.port) || 443;
-    const uuid = url.username;
+    const uuid = decodeURIComponent(url.username);
 
     const node: VlessNode = {
       name,
@@ -27,10 +28,11 @@ export function parseVlessLink(link: string): VlessNode {
       node.tls = true;
       node.sni = params.get('sni') || undefined;
       node.alpn = params.get('alpn') || undefined;
+      // fp 是 uTLS 指纹，对普通 TLS 同样有效，不只属于 reality
+      node.fingerprint = params.get('fp') || undefined;
     }
 
     if (security === 'reality') {
-      node.fingerprint = params.get('fp') || undefined;
       node.publicKey = params.get('pbk') || undefined;
       node.shortId = params.get('sid') || undefined;
     }
@@ -58,6 +60,11 @@ export function parseVlessLink(link: string): VlessNode {
     const flow = params.get('flow');
     if (flow) {
       node.flow = flow;
+    }
+
+    const packetEncoding = params.get('packetEncoding');
+    if (packetEncoding) {
+      node.packetEncoding = packetEncoding;
     }
 
     return node;

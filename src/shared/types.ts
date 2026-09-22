@@ -1,6 +1,3 @@
-// 代理协议类型
-export type ProxyProtocol = 'vless' | 'vmess' | 'trojan' | 'ss';
-
 // 规则模板 ID
 export type RuleTemplate =
   | 'blacklist'
@@ -32,7 +29,14 @@ export interface ClashDNSOptions {
   fakeIpRange: string;
   fakeIpFilter: string[];
   nameserver: string[];
-  fallback: string[];
+  // 解析 nameserver 里域名形式的 DNS 服务器，必须是明文 UDP
+  defaultNameserver?: string[];
+  // 专门解析代理节点的 server 域名，必须本地直连可达
+  proxyServerNameserver?: string[];
+  nameserverPolicy?: Record<string, string[]>;
+  // 默认不输出：见 src/shared/defaults.ts 的说明
+  fallback?: string[];
+  useFallbackFilter?: boolean;
 }
 
 // 订阅数据结构
@@ -64,6 +68,7 @@ export interface VlessNode {
   // 其他
   allowInsecure?: boolean;
   serviceName?: string;
+  packetEncoding?: string;
 }
 
 // Clash 代理节点
@@ -76,6 +81,8 @@ export interface ClashProxy {
   password?: string;
   cipher?: string;
   network?: string;
+  udp?: boolean;
+  'packet-encoding'?: string;
   tls?: boolean;
   'skip-cert-verify'?: boolean;
   servername?: string;
@@ -103,13 +110,26 @@ export interface ClashDNSConfig {
   'enhanced-mode': 'fake-ip' | 'redir-host';
   'fake-ip-range': string;
   'fake-ip-filter': string[];
+  'default-nameserver': string[];
   nameserver: string[];
-  fallback: string[];
-  'fallback-filter': {
+  'proxy-server-nameserver': string[];
+  'nameserver-policy'?: Record<string, string[]>;
+  fallback?: string[];
+  'fallback-filter'?: {
     geoip: boolean;
-    'geoip-code': string;
+    'geoip-code'?: string;
     ipcidr: string[];
   };
+}
+
+// 规则集提供者（客户端自行下载，避免把几十万条规则内联进配置）
+export interface ClashRuleProvider {
+  type: 'http';
+  behavior: 'domain' | 'ipcidr' | 'classical';
+  format: 'yaml' | 'text';
+  url: string;
+  path: string;
+  interval: number;
 }
 
 // Clash 配置
@@ -119,6 +139,16 @@ export interface ClashConfig {
   mode: 'rule' | 'global' | 'direct';
   'log-level': 'info' | 'warning' | 'error' | 'debug' | 'silent';
   ipv6: boolean;
+  'unified-delay'?: boolean;
+  'tcp-concurrent'?: boolean;
+  'geodata-mode'?: boolean;
+  'geo-auto-update'?: boolean;
+  'geo-update-interval'?: number;
+  'geox-url'?: {
+    geoip: string;
+    geosite: string;
+    mmdb: string;
+  };
   dns: ClashDNSConfig;
   proxies: ClashProxy[];
   'proxy-groups': Array<{
@@ -126,6 +156,7 @@ export interface ClashConfig {
     type: string;
     proxies: string[];
   }>;
+  'rule-providers'?: Record<string, ClashRuleProvider>;
   rules: string[];
 }
 

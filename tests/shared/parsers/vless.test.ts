@@ -57,4 +57,23 @@ describe('vless parser', () => {
     expect(() => parseVlessLink('invalid')).toThrow();
     expect(() => parseVlessLink('vmess://test')).toThrow();
   });
+  it('strips the brackets from an IPv6 literal', () => {
+    const node = parseVlessLink('vless://uuid@[2001:db8::1]:443?security=tls#V6');
+    expect(node.server).toBe('2001:db8::1');
+  });
+
+  it('reads the uTLS fingerprint for plain TLS too, not only reality', () => {
+    const node = parseVlessLink('vless://uuid@host:443?security=tls&fp=chrome#Node');
+    expect(node.fingerprint).toBe('chrome');
+  });
+
+  it('percent-decodes the uuid', () => {
+    const node = parseVlessLink('vless://a%2Bb@host:443?security=tls#Node');
+    expect(node.uuid).toBe('a+b');
+  });
+
+  it('parses packetEncoding', () => {
+    const node = parseVlessLink('vless://uuid@host:443?packetEncoding=packetaddr#Node');
+    expect(node.packetEncoding).toBe('packetaddr');
+  });
 });

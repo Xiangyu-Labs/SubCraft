@@ -103,4 +103,49 @@ describe('functions/api/sub', () => {
     expect(body).toContain('[General]');
     expect(body).toContain('TestNode');
   });
+  it('dedupes node names so Clash will load the config', async () => {
+    const data: SubscriptionData = {
+      links: [
+        'vless://uuid1@a.example.com:443?encryption=none',
+        'vless://uuid2@b.example.com:443?encryption=none',
+      ],
+      template: 'blacklist',
+      client: 'clash',
+    };
+    const res = await onRequestGet(
+      makeContext(`https://app.test/api/sub?data=${encodeSubscriptionData(data)}`),
+    );
+    const body = await res.text();
+
+    expect(body).toContain('Unnamed');
+    expect(body).toContain('Unnamed #2');
+  });
+
+  it('points rule providers back at the requesting origin', async () => {
+    const data: SubscriptionData = {
+      links: ['vless://uuid@example.com:443?encryption=none#N'],
+      template: 'blacklist',
+      client: 'clash',
+    };
+    const res = await onRequestGet(
+      makeContext(`https://app.test/api/sub?data=${encodeSubscriptionData(data)}`),
+    );
+    const body = await res.text();
+
+    expect(body).toContain('https://app.test/api/ruleset/proxy');
+    // 内联展开会产出 MB 级配置
+    expect(body.length).toBeLessThan(20000);
+  });
+
+  it('tells the client how often to refresh', async () => {
+    const data: SubscriptionData = {
+      links: ['vless://uuid@example.com:443?encryption=none#N'],
+      template: 'blacklist',
+      client: 'clash',
+    };
+    const res = await onRequestGet(
+      makeContext(`https://app.test/api/sub?data=${encodeSubscriptionData(data)}`),
+    );
+    expect(res.headers.get('Profile-Update-Interval')).toBe('24');
+  });
 });

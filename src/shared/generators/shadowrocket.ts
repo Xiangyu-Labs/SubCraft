@@ -1,6 +1,8 @@
 import type { VlessNode, SubscriptionData, ShadowrocketConfig } from '../types';
 import { ruleTemplates } from '../rules';
-import { fetchRules } from './rules-fetcher';
+import { localDnsFor } from '../defaults';
+import { buildNodeDirectRules, PRIVATE_DIRECT_RULES } from '../nodes';
+
 function vlessToShadowrocketProxy(node: VlessNode): string {
   const parts: string[] = [
     node.name + ' = vless',
@@ -44,7 +46,9 @@ function vlessToShadowrocketProxy(node: VlessNode): string {
       parts.push('ws-path=' + node.wsPath);
     }
     if (node.wsHost) {
-      parts.push('ws-headers=' + node.wsHost);
+      // Surge / Shadowrocket 的语法是 Key:Value，多个 header 用 | 分隔。
+      // 少了 Host: 前缀会被当成无名 header，ws+CDN 节点必然握手失败。
+      parts.push('ws-headers=Host:' + node.wsHost);
     }
   }
 
@@ -56,10 +60,11 @@ function vlessToShadowrocketProxy(node: VlessNode): string {
   return parts.join(', ');
 }
 
-export async function generateShadowrocketConfig(
+export function generateShadowrocketConfig(
   nodes: VlessNode[],
   subscriptionData: SubscriptionData,
-): Promise<ShadowrocketConfig> {
+  origin: string,
+): ShadowrocketConfig {
   const template = ruleTemplates[subscriptionData.template];
   if (!template) {
     throw new Error(`Unknown rule template: ${subscriptionData.template}`);
@@ -70,7 +75,7 @@ export async function generateShadowrocketConfig(
     '[General]',
     'bypass-system = true',
     'skip-proxy = 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, localhost, *.local, captive.apple.com',
-    'dns-server = 223.5.5.5, 119.29.29.29',
+    'dns-server = ' + localDnsFor(subscriptionData.template).join(', '),
     '',
   ];
 
@@ -90,27 +95,29 @@ export async function generateShadowrocketConfig(
   // [Rule]
   lines.push('[Rule]');
 
+  // 节点自身与私网永远直连，放在最前面
+  for (const rule of buildNodeDirectRules(nodes)) {
+    lines.push(rule);
+  }
+  for (const rule of PRIVATE_DIRECT_RULES) {
+    lines.push(rule);
+  }
+
   for (const rule of template.rules) {
     if (rule.startsWith('RULE-SET,')) {
       const parts = rule.split(',');
       const ruleSetName = parts[1];
       const action = parts[2];
 
-      if (template.ruleUrls && template.ruleUrls[ruleSetName]) {
-        try {
-          const domains = await fetchRules(template.ruleUrls[ruleSetName]);
-          for (const domain of domains) {
-            lines.push('DOMAIN-SUFFIX,' + domain + ',' + action);
-          }
-        } catch (error) {
-          console.error(`Failed to fetch rule set ${ruleSetName}:`, error);
-          lines.push(rule);
-        }
-      } else {
-        lines.push(rule);
+      if (!template.ruleUrls?.[ruleSetName]) {
+        console.warn(`Rule set ${ruleSetName} has no source url, dropped`);
+        continue;
       }
-    } else if (rule === 'GEOIP,CN,DIRECT') {
-      lines.push('GEOIP,CN,DIRECT');
+
+      // Shadowrocket 的语法是 RULE-SET,<完整URL>,<POLICY>，名字形式非法
+      lines.push(
+        `RULE-SET,${origin}/api/ruleset/${ruleSetName}?format=surge,${action}`,
+      );
     } else if (rule === 'MATCH,PROXY') {
       lines.push('FINAL,PROXY');
     } else if (rule === 'MATCH,DIRECT') {
