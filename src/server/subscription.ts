@@ -1,4 +1,4 @@
-import yaml from 'js-yaml';
+import { dump } from 'js-yaml';
 import type { ClientType, ProxyNode, SubscriptionData } from '@/shared/types';
 import { parseLinkList } from '@/shared/parsers';
 import { generateClashConfig } from '@/shared/generators/clash';
@@ -100,7 +100,7 @@ export async function renderSubscription(
       });
     }
 
-    const body = yaml.dump(generateClashConfig(nodes, data, url.origin), {
+    const body = dump(generateClashConfig(nodes, data, url.origin), {
       lineWidth: -1,
       noRefs: true,
     });

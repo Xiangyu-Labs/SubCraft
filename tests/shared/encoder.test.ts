@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import pako from 'pako';
+import { gzip } from 'pako';
 import {
   encodeSubscriptionData,
   decodeSubscriptionData,
@@ -70,7 +70,7 @@ describe('encoder compact format', () => {
       template: 'blacklist',
       baseConfig: { mixedPort: 7890, allowLan: false, mode: 'rule', logLevel: 'info', ipv6: false },
     };
-    const gzipped = bytesToBase64Url(pako.gzip(JSON.stringify(data)));
+    const gzipped = bytesToBase64Url(gzip(JSON.stringify(data)));
     expect(encodeSubscriptionData(data).length).toBeLessThan(gzipped.length * 0.8);
   });
 

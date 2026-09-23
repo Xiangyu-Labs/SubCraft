@@ -11,7 +11,7 @@
 - ⚙️ **自定义规则**：支持配置代理、直连、拦截规则
 - 🎯 **多客户端**：同一个链接通吃 Clash / mihomo（含 ClashMetaForAndroid）与 Shadowrocket，按 User-Agent 自动输出对应格式
 - 🧭 **策略组**：多节点时自动附带「自动选择」（url-test）与「故障转移」（fallback）
-- 🎨 **现代化界面**：基于 Vite 5 + React 19 + Tailwind CSS v4
+- 🎨 **现代化界面**：基于 Vite 8 + React 19 + Tailwind CSS v4
 
 ## 工作原理
 
@@ -31,7 +31,7 @@
 
 ## 技术栈
 
-- Vite 5 + React 19 + TypeScript
+- Vite 8 + React 19 + TypeScript 6
 - Tailwind CSS v4
 - Cloudflare Pages + Pages Functions
 - Wrangler CLI for deploy

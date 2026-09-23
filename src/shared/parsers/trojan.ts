@@ -10,7 +10,7 @@ export function parseTrojanLink(link: string): TrojanNode {
   try {
     url = new URL(link);
   } catch (error) {
-    throw new Error(`Failed to parse trojan link: ${error}`);
+    throw new Error(`Failed to parse trojan link: ${error}`, { cause: error });
   }
   const params = url.searchParams;
 

@@ -10,7 +10,7 @@ export function parseVlessLink(link: string): VlessNode {
   try {
     url = new URL(link);
   } catch (error) {
-    throw new Error(`Failed to parse vless link: ${error}`);
+    throw new Error(`Failed to parse vless link: ${error}`, { cause: error });
   }
   const params = url.searchParams;
 

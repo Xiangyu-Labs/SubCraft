@@ -11,7 +11,7 @@ export function parseTuicLink(link: string): TuicNode {
   try {
     url = new URL(link);
   } catch (error) {
-    throw new Error(`Failed to parse tuic link: ${error}`);
+    throw new Error(`Failed to parse tuic link: ${error}`, { cause: error });
   }
   const params = url.searchParams;
 

@@ -1,4 +1,4 @@
-import pako from 'pako';
+import { deflateRaw, inflateRaw } from 'pako';
 import type { ClashBaseConfig, SubscriptionData } from './types';
 import { base64ToBytes, bytesToBase64Url } from './base64';
 import { DEFAULT_BASE_CONFIG } from './defaults';
@@ -56,13 +56,13 @@ function fromCompact(c: CompactData): SubscriptionData {
 
 export function encodeSubscriptionData(data: SubscriptionData): string {
   const json = JSON.stringify(toCompact(data));
-  return bytesToBase64Url(pako.deflateRaw(json, { level: 9 }));
+  return bytesToBase64Url(deflateRaw(json, { level: 9 }));
 }
 
 export function decodeSubscriptionData(encoded: string): SubscriptionData {
   try {
     const bytes = base64ToBytes(encoded);
-    return fromCompact(JSON.parse(pako.inflateRaw(bytes, { to: 'string' })) as CompactData);
+    return fromCompact(JSON.parse(inflateRaw(bytes, { toText: true })) as CompactData);
   } catch {
     throw new Error('Invalid encoded data');
   }

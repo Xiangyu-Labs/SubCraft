@@ -23,7 +23,7 @@ export function parseHysteria2Link(link: string): Hysteria2Node {
   try {
     url = new URL('hysteria2://' + rest);
   } catch (error) {
-    throw new Error(`Failed to parse hysteria2 link: ${error}`);
+    throw new Error(`Failed to parse hysteria2 link: ${error}`, { cause: error });
   }
   const params = url.searchParams;
 

@@ -55,7 +55,7 @@ export function parseSsLink(link: string): SsNode {
   try {
     url = new URL('ss://' + body);
   } catch (error) {
-    throw new Error(`Failed to parse ss link: ${error}`);
+    throw new Error(`Failed to parse ss link: ${error}`, { cause: error });
   }
 
   const userinfo = safeDecode(url.username) + (url.password ? ':' + safeDecode(url.password) : '');
