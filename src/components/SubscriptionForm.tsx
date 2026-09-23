@@ -9,7 +9,7 @@ import { AdvancedOptions, type AdvancedValues } from './AdvancedOptions';
 import { ImportBox } from './ImportBox';
 import { NodePreview } from './NodePreview';
 import { ResultPanel } from './ResultPanel';
-import { fieldClass, fieldStyle } from './field';
+import { Section, buttonClass, inputClass } from './ui';
 
 const GB = 1024 ** 3;
 
@@ -44,7 +44,6 @@ export function SubscriptionForm() {
   const [links, setLinks] = useState('');
   const [template, setTemplate] = useState<RuleTemplate>('blacklist');
   const [advanced, setAdvanced] = useState<AdvancedValues>(DEFAULT_ADVANCED);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [subscriptionUrl, setSubscriptionUrl] = useState('');
   const [error, setError] = useState('');
 
@@ -103,79 +102,72 @@ export function SubscriptionForm() {
   };
 
   return (
-    <div className="w-full max-w-2xl space-y-6">
-      <ImportBox onImport={handleImport} />
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">代理链接 / 上游订阅地址（每行一个）</label>
+    <div className="space-y-6">
+      <Section label="links" hint="每行一个：vless / vmess / trojan / ss / hysteria2 / tuic，http(s) 开头的行视为上游订阅">
         <textarea
           value={links}
           onChange={(e) => setLinks(e.target.value)}
           placeholder={[
-            'vless://uuid@example.com:443?security=reality&...#节点名称',
-            'hysteria2://password@example.com:443#节点名称',
-            'https://机场或面板的订阅地址（流量信息会透传给客户端）',
+            'vless://uuid@example.com:443?security=reality&...#name',
+            'hysteria2://password@example.com:443#name',
+            'https://example.com/sub/token',
           ].join('\n')}
-          className={`${fieldClass} h-36 resize-y font-mono text-sm`}
-          style={fieldStyle}
+          spellCheck={false}
+          className={`${inputClass} h-40 resize-y text-xs`}
         />
-        <p className="text-xs text-muted-foreground">
-          支持 vless / vmess / trojan / ss / hysteria2 / tuic；http(s) 开头的行视为上游订阅。
-        </p>
-      </div>
+        <NodePreview entries={parsed.entries} />
+      </Section>
 
-      <NodePreview entries={parsed.entries} />
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium">规则模板</label>
-        <select
-          value={template}
-          onChange={(e) => setTemplate(e.target.value as RuleTemplate)}
-          className={fieldClass}
-          style={fieldStyle}
-        >
+      <Section label="rules">
+        <div className="grid gap-x-6 sm:grid-cols-2">
           {Object.values(ruleTemplates).map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}（{t.description}）
-            </option>
+            <label key={t.id} className="flex cursor-pointer gap-2 py-0.5" title={t.description}>
+              <input
+                type="radio"
+                name="template"
+                checked={template === t.id}
+                onChange={() => setTemplate(t.id as RuleTemplate)}
+                className="accent-accent"
+              />
+              <span className={template === t.id ? '' : 'text-muted'}>{t.name}</span>
+            </label>
           ))}
-        </select>
-      </div>
-
-      <button
-        type="button"
-        onClick={() => setShowAdvanced(!showAdvanced)}
-        className="text-sm font-medium"
-        style={{ color: 'var(--primary)' }}
-      >
-        {showAdvanced ? '隐藏' : '显示'}高级配置
-      </button>
-
-      {showAdvanced && (
-        <AdvancedOptions
-          values={advanced}
-          onChange={(patch) => setAdvanced((prev) => ({ ...prev, ...patch }))}
-        />
-      )}
-
-      {error && (
-        <div
-          className="p-3 rounded-md text-sm"
-          style={{ color: 'var(--danger)', border: '1px solid var(--danger)' }}
-        >
-          {error}
         </div>
-      )}
+        <p className="text-xs text-muted">{ruleTemplates[template].description}</p>
+      </Section>
 
-      <button
-        onClick={handleGenerate}
-        className="w-full h-10 rounded-md font-medium text-white transition-all active:scale-[0.99]"
-        style={{ background: 'var(--primary)' }}
-      >
-        生成订阅链接
-      </button>
+      <details className="group">
+        <summary className="cursor-pointer select-none text-accent">
+          options <span className="text-xs text-muted">名称、端口、模式、手填流量</span>
+        </summary>
+        <div className="mt-2">
+          <AdvancedOptions
+            values={advanced}
+            onChange={(patch) => setAdvanced((prev) => ({ ...prev, ...patch }))}
+          />
+        </div>
+      </details>
 
-      {subscriptionUrl && <ResultPanel url={subscriptionUrl} />}
+      <details>
+        <summary className="cursor-pointer select-none text-accent">
+          import <span className="text-xs text-muted">粘贴已生成的订阅链接，回填后继续编辑</span>
+        </summary>
+        <div className="mt-2">
+          <ImportBox onImport={handleImport} />
+        </div>
+      </details>
+
+      <div className="space-y-3 border-t border-line pt-6">
+        <button
+          type="button"
+          onClick={handleGenerate}
+          className={`${buttonClass} border-fg bg-fg text-bg hover:opacity-85`}
+        >
+          生成订阅链接
+        </button>
+        {error && <p className="text-danger">error: {error}</p>}
+        {subscriptionUrl && <ResultPanel url={subscriptionUrl} />}
+      </div>
     </div>
   );
 }

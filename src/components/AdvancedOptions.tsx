@@ -1,5 +1,6 @@
+import type { ReactNode } from 'react';
 import type { ClashBaseConfig } from '@/shared/types';
-import { fieldClass, fieldStyle } from './field';
+import { inputClass } from './ui';
 
 export interface AdvancedValues {
   name: string;
@@ -14,78 +15,70 @@ interface Props {
   onChange: (patch: Partial<AdvancedValues>) => void;
 }
 
+function Row({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <>
+      <label className="pt-1.5 text-muted">{label}</label>
+      <div>{children}</div>
+    </>
+  );
+}
+
 export function AdvancedOptions({ values, onChange }: Props) {
   return (
-    <div className="space-y-4 p-4 rounded-md border" style={{ borderColor: 'var(--border)' }}>
-      <div className="space-y-2">
-        <label className="text-sm font-medium">订阅名称</label>
-        <input
-          value={values.name}
-          maxLength={64}
-          onChange={(e) => onChange({ name: e.target.value })}
-          placeholder="SubCraft"
-          className={fieldClass}
-          style={fieldStyle}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">代理端口</label>
+    <div className="space-y-2">
+      <div className="grid grid-cols-[6rem_1fr] gap-x-3 gap-y-2">
+        <Row label="name">
+          <input
+            value={values.name}
+            maxLength={64}
+            onChange={(e) => onChange({ name: e.target.value })}
+            placeholder="SubCraft"
+            className={inputClass}
+          />
+        </Row>
+        <Row label="port">
           <input
             type="number"
             value={values.mixedPort}
             onChange={(e) => onChange({ mixedPort: Number(e.target.value) })}
-            className={fieldClass}
-            style={fieldStyle}
+            className={inputClass}
           />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">代理模式</label>
+        </Row>
+        <Row label="mode">
           <select
             value={values.mode}
             onChange={(e) => onChange({ mode: e.target.value as ClashBaseConfig['mode'] })}
-            className={fieldClass}
-            style={fieldStyle}
+            className={inputClass}
           >
-            <option value="rule">规则模式</option>
-            <option value="global">全局代理</option>
-            <option value="direct">直连模式</option>
+            <option value="rule">rule — 规则</option>
+            <option value="global">global — 全局代理</option>
+            <option value="direct">direct — 全部直连</option>
           </select>
-        </div>
+        </Row>
+        <Row label="total GB">
+          <input
+            type="number"
+            min={0}
+            step="any"
+            value={values.totalGB}
+            onChange={(e) => onChange({ totalGB: e.target.value })}
+            placeholder="不填"
+            className={inputClass}
+          />
+        </Row>
+        <Row label="expire">
+          <input
+            type="date"
+            value={values.expireDate}
+            onChange={(e) => onChange({ expireDate: e.target.value })}
+            className={inputClass}
+          />
+        </Row>
       </div>
-
-      <div className="space-y-2">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">总流量（GB）</label>
-            <input
-              type="number"
-              min={0}
-              step="any"
-              value={values.totalGB}
-              onChange={(e) => onChange({ totalGB: e.target.value })}
-              placeholder="不填"
-              className={fieldClass}
-              style={fieldStyle}
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">到期日期</label>
-            <input
-              type="date"
-              value={values.expireDate}
-              onChange={(e) => onChange({ expireDate: e.target.value })}
-              className={fieldClass}
-              style={fieldStyle}
-            />
-          </div>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          仅在没有上游订阅时生效；填了上游订阅地址会自动使用它的真实流量。
-        </p>
-      </div>
+      <p className="text-xs text-muted">
+        total / expire 只在没有上游订阅时生效；有上游时用它的真实流量。
+      </p>
     </div>
   );
 }

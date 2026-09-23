@@ -1,25 +1,5 @@
 import type { LinkEntry } from '@/shared/parsers';
 
-const LABELS: Record<string, string> = {
-  vless: 'VLESS',
-  vmess: 'VMess',
-  trojan: 'Trojan',
-  ss: 'SS',
-  hysteria2: 'Hy2',
-  tuic: 'TUIC',
-};
-
-function Badge({ text, color }: { text: string; color: string }) {
-  return (
-    <span
-      className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold"
-      style={{ color, border: `1px solid ${color}` }}
-    >
-      {text}
-    </span>
-  );
-}
-
 /** 逐行显示解析结果：写错的链接当场标出来，而不是在服务端被悄悄丢掉 */
 export function NodePreview({ entries }: { entries: LinkEntry[] }) {
   if (entries.length === 0) return null;
@@ -29,43 +9,36 @@ export function NodePreview({ entries }: { entries: LinkEntry[] }) {
   const errors = entries.filter((e) => e.kind === 'error').length;
 
   return (
-    <div className="rounded-md border text-sm" style={{ borderColor: 'var(--border)' }}>
-      <div className="flex gap-3 border-b px-3 py-2 text-xs text-muted-foreground" style={{ borderColor: 'var(--border)' }}>
-        <span>{nodes} 个节点</span>
-        {upstreams > 0 && <span>{upstreams} 个上游订阅</span>}
-        {errors > 0 && <span style={{ color: 'var(--danger)' }}>{errors} 行无法解析</span>}
+    <div className="border border-line text-xs">
+      <div className="border-b border-line px-2 py-1 text-muted">
+        {nodes} 个节点
+        {upstreams > 0 && ` · ${upstreams} 个上游订阅`}
+        {errors > 0 && <span className="text-danger"> · {errors} 行无法解析</span>}
       </div>
-      <ul className="max-h-56 overflow-y-auto">
+      <ul className="max-h-60 overflow-y-auto py-1">
         {entries.map((entry) => (
-          <li
-            key={entry.line}
-            className="flex items-center gap-2 px-3 py-1.5 min-w-0"
-          >
-            <span className="w-6 shrink-0 text-right font-mono text-xs text-muted-foreground">
-              {entry.line}
-            </span>
+          <li key={entry.line} className="flex min-w-0 gap-3 px-2 py-0.5">
+            <span className="w-5 shrink-0 text-right text-muted">{entry.line}</span>
             {entry.kind === 'node' && (
               <>
-                <Badge text={LABELS[entry.node.type] ?? entry.node.type} color="var(--primary)" />
+                <span className="w-16 shrink-0 text-accent">{entry.node.type}</span>
                 <span className="truncate">{entry.node.name}</span>
-                <span className="ml-auto shrink-0 font-mono text-xs text-muted-foreground">
+                <span className="ml-auto shrink-0 text-muted">
                   {entry.node.server}:{entry.node.port}
                 </span>
               </>
             )}
             {entry.kind === 'upstream' && (
               <>
-                <Badge text="订阅" color="var(--info)" />
-                <span className="truncate font-mono text-xs">{entry.raw}</span>
-                <span className="ml-auto shrink-0 text-xs text-muted-foreground">服务端拉取</span>
+                <span className="w-16 shrink-0 text-accent">upstream</span>
+                <span className="truncate">{entry.raw}</span>
+                <span className="ml-auto shrink-0 text-muted">服务端拉取</span>
               </>
             )}
             {entry.kind === 'error' && (
               <>
-                <Badge text="错误" color="var(--danger)" />
-                <span className="truncate" style={{ color: 'var(--danger)' }}>
-                  {entry.message}
-                </span>
+                <span className="w-16 shrink-0 text-danger">error</span>
+                <span className="truncate text-danger">{entry.message}</span>
               </>
             )}
           </li>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { decodeSubscriptionData, extractEncodedData, validateSubscriptionData } from '@/shared/encoder';
 import type { SubscriptionData } from '@/shared/types';
-import { fieldClass, fieldStyle } from './field';
+import { buttonClass, inputClass } from './ui';
 
 /** 粘贴已生成的订阅链接，在浏览器本地解码回填——数据本来就全在链接里 */
 export function ImportBox({ onImport }: { onImport: (data: SubscriptionData) => void }) {
@@ -24,26 +24,20 @@ export function ImportBox({ onImport }: { onImport: (data: SubscriptionData) => 
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       <div className="flex gap-2">
         <input
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="粘贴已有的订阅链接，回填后继续编辑"
-          className={`${fieldClass} flex-1 font-mono text-sm`}
-          style={fieldStyle}
+          onKeyDown={(e) => e.key === 'Enter' && handleImport()}
+          placeholder="https://…/api/sub?data=…"
+          className={inputClass}
         />
-        <button
-          type="button"
-          onClick={handleImport}
-          disabled={!value.trim()}
-          className="shrink-0 px-4 py-2 rounded-md border font-medium transition-all active:scale-[0.99] disabled:opacity-50"
-          style={{ borderColor: 'var(--border)', color: 'var(--text)' }}
-        >
+        <button type="button" onClick={handleImport} disabled={!value.trim()} className={buttonClass}>
           导入
         </button>
       </div>
-      {error && <p className="text-xs" style={{ color: 'var(--danger)' }}>{error}</p>}
+      {error && <p className="text-xs text-danger">error: {error}</p>}
     </div>
   );
 }

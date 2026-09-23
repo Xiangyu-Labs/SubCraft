@@ -11,7 +11,7 @@
 - ⚙️ **自定义规则**：支持配置代理、直连、拦截规则
 - 🎯 **多客户端**：同一个链接通吃 Clash / mihomo（含 ClashMetaForAndroid）与 Shadowrocket，按 User-Agent 自动输出对应格式
 - 🧭 **策略组**：多节点时自动附带「自动选择」（url-test）与「故障转移」（fallback）
-- 🎨 **现代化界面**：基于 Vite 8 + React 19 + Tailwind CSS v4
+- 🖥️ **极简界面**：等宽字体、亮暗跟随系统，不加载任何外部字体或图标
 
 ## 工作原理
 
@@ -142,7 +142,7 @@ GitHub Variables：
 │   ├── main.tsx                  # SPA 入口
 │   ├── App.tsx                   # 根组件
 │   ├── components/               # SubscriptionForm 及其子组件
-│   ├── lib/                      # 仅前端使用（theme, toast, utils）
+│   ├── lib/                      # 仅前端使用（toast）
 │   ├── server/                   # 仅 Functions 使用
 │   │   ├── subscription.ts       # 订阅渲染：选格式、合并节点、响应头
 │   │   └── upstream.ts           # 拉取上游订阅、解析 userinfo
