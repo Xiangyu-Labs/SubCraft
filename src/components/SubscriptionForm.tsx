@@ -1,185 +1,172 @@
-import { useState, useEffect } from 'react';
-import QRCode from 'qrcode';
+import { useMemo, useState } from 'react';
 import { encodeSubscriptionData } from '@/shared/encoder';
+import { parseLinkList } from '@/shared/parsers';
 import { ruleTemplates } from '@/shared/rules';
+import { DEFAULT_BASE_CONFIG } from '@/shared/defaults';
 import { showToast } from '@/lib/toast';
-import type { RuleTemplate, ClientType } from '@/shared/types';
+import type { RuleTemplate, SubscriptionData } from '@/shared/types';
+import { AdvancedOptions, type AdvancedValues } from './AdvancedOptions';
+import { ImportBox } from './ImportBox';
+import { NodePreview } from './NodePreview';
+import { ResultPanel } from './ResultPanel';
+import { fieldClass, fieldStyle } from './field';
+
+const GB = 1024 ** 3;
+
+const DEFAULT_ADVANCED: AdvancedValues = {
+  name: '',
+  mixedPort: DEFAULT_BASE_CONFIG.mixedPort,
+  mode: DEFAULT_BASE_CONFIG.mode,
+  totalGB: '',
+  expireDate: '',
+};
+
+function toDateInput(unix: number): string {
+  const d = new Date(unix * 1000);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function buildUserinfo(adv: AdvancedValues): SubscriptionData['userinfo'] {
+  const total = adv.totalGB ? Math.round(Number(adv.totalGB) * GB) : 0;
+  // 到期日当天结束时过期
+  const expire = adv.expireDate
+    ? Math.floor(new Date(`${adv.expireDate}T23:59:59`).getTime() / 1000)
+    : 0;
+  if (!(total > 0) && !(expire > 0)) return undefined;
+  return {
+    ...(total > 0 ? { total } : {}),
+    ...(expire > 0 ? { expire } : {}),
+  };
+}
 
 export function SubscriptionForm() {
   const [links, setLinks] = useState('');
   const [template, setTemplate] = useState<RuleTemplate>('blacklist');
-  const [client, setClient] = useState<ClientType>('clash');
-  const [subscriptionUrl, setSubscriptionUrl] = useState('');
-  const [qrDataUrl, setQrDataUrl] = useState('');
-  const [error, setError] = useState('');
+  const [advanced, setAdvanced] = useState<AdvancedValues>(DEFAULT_ADVANCED);
+  // 导入的旧链接里可能带 dnsOptions，界面不编辑它，但重新生成时要原样保留
+  const [dnsOptions, setDnsOptions] = useState<SubscriptionData['dnsOptions']>();
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [mixedPort, setMixedPort] = useState(7890);
-  const [mode, setMode] = useState<'rule' | 'global' | 'direct'>('rule');
+  const [subscriptionUrl, setSubscriptionUrl] = useState('');
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (client === 'shadowrocket' && subscriptionUrl) {
-      QRCode.toDataURL(subscriptionUrl, { margin: 2, width: 200 })
-        .then(setQrDataUrl)
-        .catch(() => setQrDataUrl(''));
-    } else {
-      setQrDataUrl('');
-    }
-  }, [client, subscriptionUrl]);
+  const parsed = useMemo(() => parseLinkList(links), [links]);
+
+  const handleImport = (data: SubscriptionData) => {
+    setLinks([...data.links, ...(data.upstreams ?? [])].join('\n'));
+    setTemplate(data.template);
+    setAdvanced({
+      name: data.name ?? '',
+      mixedPort: data.baseConfig?.mixedPort ?? DEFAULT_ADVANCED.mixedPort,
+      mode: data.baseConfig?.mode ?? DEFAULT_ADVANCED.mode,
+      totalGB: data.userinfo?.total ? String(+(data.userinfo.total / GB).toFixed(2)) : '',
+      expireDate: data.userinfo?.expire ? toDateInput(data.userinfo.expire) : '',
+    });
+    setDnsOptions(data.dnsOptions);
+    setSubscriptionUrl('');
+    setError('');
+    showToast('已导入，可以继续编辑');
+  };
 
   const handleGenerate = () => {
+    setError('');
+
+    if (parsed.nodes.length === 0 && parsed.upstreams.length === 0) {
+      setError('请至少输入一个可用的代理链接或上游订阅地址');
+      return;
+    }
+
     try {
-      setError('');
-
-      const linkArray = links
-        .split('\n')
-        .map((l) => l.trim())
-        .filter((l) => l.length > 0)
-        .map((l) => l.replace(/@(https?:\/\/)/, '@'));
-
-      if (linkArray.length === 0) {
-        setError('请至少输入一个代理链接');
-        return;
-      }
-
       const encoded = encodeSubscriptionData({
-        links: linkArray,
+        links: parsed.links,
+        upstreams: parsed.upstreams.length ? parsed.upstreams : undefined,
         template,
-        client,
+        name: advanced.name.trim() || undefined,
         baseConfig: {
-          mixedPort,
-          allowLan: false,
-          mode,
-          logLevel: 'info',
-          ipv6: false,
+          ...DEFAULT_BASE_CONFIG,
+          mixedPort: advanced.mixedPort,
+          mode: advanced.mode,
         },
+        dnsOptions,
+        userinfo: buildUserinfo(advanced),
       });
 
       let baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
       if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
         baseUrl = 'https://' + baseUrl;
       }
-      const url = `${baseUrl}/api/sub?data=${encoded}`;
-      setSubscriptionUrl(url);
+      setSubscriptionUrl(`${baseUrl}/api/sub?data=${encoded}`);
+
+      if (parsed.errors.length) {
+        showToast(`已忽略 ${parsed.errors.length} 行无法解析的内容`, 'error');
+      }
     } catch (err) {
       console.error('生成失败:', err);
       setError('生成订阅链接失败');
     }
   };
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(subscriptionUrl);
-      showToast('已复制到剪贴板');
-    } catch {
-      showToast('复制失败，请手动复制', 'error');
-    }
-  };
-
   return (
     <div className="w-full max-w-2xl space-y-6">
+      <ImportBox onImport={handleImport} />
+
       <div className="space-y-2">
-        <label className="text-sm font-medium">代理链接（每行一个）</label>
+        <label className="text-sm font-medium">代理链接 / 上游订阅地址（每行一个）</label>
         <textarea
           value={links}
           onChange={(e) => setLinks(e.target.value)}
-          placeholder="vless://uuid@example.com:443?encryption=none#节点名称"
-          className="w-full h-32 px-3 py-2 rounded-md border resize-none font-mono text-sm"
-          style={{
-            background: 'var(--surface)',
-            borderColor: 'var(--border)',
-            color: 'var(--text)',
-          }}
+          placeholder={[
+            'vless://uuid@example.com:443?security=reality&...#节点名称',
+            'hysteria2://password@example.com:443#节点名称',
+            'https://机场或面板的订阅地址（流量信息会透传给客户端）',
+          ].join('\n')}
+          className={`${fieldClass} h-36 resize-y font-mono text-sm`}
+          style={fieldStyle}
         />
+        <p className="text-xs text-muted-foreground">
+          支持 vless / vmess / trojan / ss / hysteria2 / tuic；http(s) 开头的行视为上游订阅。
+        </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">客户端</label>
-          <select
-            value={client}
-            onChange={(e) => setClient(e.target.value as ClientType)}
-            className="w-full px-3 py-2 rounded-md border"
-            style={{
-              background: 'var(--surface)',
-              borderColor: 'var(--border)',
-              color: 'var(--text)',
-            }}
-          >
-            <option value="clash">Clash</option>
-            <option value="shadowrocket">Shadowrocket</option>
-          </select>
-        </div>
+      <NodePreview entries={parsed.entries} />
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">规则模板</label>
-          <select
-            value={template}
-            onChange={(e) => setTemplate(e.target.value as RuleTemplate)}
-            className="w-full px-3 py-2 rounded-md border"
-            style={{
-              background: 'var(--surface)',
-              borderColor: 'var(--border)',
-              color: 'var(--text)',
-            }}
-          >
-            {Object.values(ruleTemplates).map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">规则模板</label>
+        <select
+          value={template}
+          onChange={(e) => setTemplate(e.target.value as RuleTemplate)}
+          className={fieldClass}
+          style={fieldStyle}
+        >
+          {Object.values(ruleTemplates).map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name}（{t.description}）
+            </option>
+          ))}
+        </select>
       </div>
 
       <button
         type="button"
         onClick={() => setShowAdvanced(!showAdvanced)}
-        className="text-sm font-medium text-blue-600 hover:text-blue-700"
+        className="text-sm font-medium"
+        style={{ color: 'var(--primary)' }}
       >
         {showAdvanced ? '隐藏' : '显示'}高级配置
       </button>
 
       {showAdvanced && (
-        <div className="space-y-4 p-4 rounded-md border" style={{ borderColor: 'var(--border)' }}>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">代理端口</label>
-              <input
-                type="number"
-                value={mixedPort}
-                onChange={(e) => setMixedPort(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-md border"
-                style={{
-                  background: 'var(--surface)',
-                  borderColor: 'var(--border)',
-                  color: 'var(--text)',
-                }}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">代理模式</label>
-              <select
-                value={mode}
-                onChange={(e) => setMode(e.target.value as 'rule' | 'global' | 'direct')}
-                className="w-full px-3 py-2 rounded-md border"
-                style={{
-                  background: 'var(--surface)',
-                  borderColor: 'var(--border)',
-                  color: 'var(--text)',
-                }}
-              >
-                <option value="rule">规则模式</option>
-                <option value="global">全局代理</option>
-                <option value="direct">直连模式</option>
-              </select>
-            </div>
-          </div>
-        </div>
+        <AdvancedOptions
+          values={advanced}
+          onChange={(patch) => setAdvanced((prev) => ({ ...prev, ...patch }))}
+        />
       )}
 
       {error && (
-        <div className="p-3 rounded-md bg-red-50 text-red-600 text-sm">
+        <div
+          className="p-3 rounded-md text-sm"
+          style={{ color: 'var(--danger)', border: '1px solid var(--danger)' }}
+        >
           {error}
         </div>
       )}
@@ -192,47 +179,7 @@ export function SubscriptionForm() {
         生成订阅链接
       </button>
 
-      {subscriptionUrl && (
-        <div className="space-y-3">
-          <label className="text-sm font-medium">订阅链接</label>
-          <div className="flex gap-2">
-            <input
-              value={subscriptionUrl}
-              readOnly
-              className="flex-1 px-3 py-2 rounded-md border font-mono text-sm"
-              style={{
-                background: 'var(--surface)',
-                borderColor: 'var(--border)',
-                color: 'var(--text)',
-              }}
-            />
-            <button
-              onClick={handleCopy}
-              className="px-4 py-2 rounded-md border font-medium transition-all active:scale-[0.99]"
-              style={{
-                borderColor: 'var(--border)',
-                color: 'var(--text)',
-              }}
-            >
-              复制
-            </button>
-          </div>
-          {qrDataUrl && (
-            <div className="flex flex-col items-center gap-2 rounded-lg border p-4" style={{ borderColor: 'var(--border)' }}>
-              <img
-                src={qrDataUrl}
-                alt="订阅二维码"
-                className="rounded-md"
-                style={{ width: 200, height: 200 }}
-              />
-              <p className="text-xs text-muted-foreground">用 Shadowrocket 扫描上方二维码添加订阅</p>
-            </div>
-          )}
-          <p className="text-xs text-muted-foreground">
-            将链接添加到 {client === 'clash' ? 'Clash' : 'Shadowrocket'} 客户端即可使用
-          </p>
-        </div>
-      )}
+      {subscriptionUrl && <ResultPanel url={subscriptionUrl} />}
     </div>
   );
 }

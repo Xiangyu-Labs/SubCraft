@@ -44,3 +44,42 @@ describe('functions/api/ruleset/[name]', () => {
     expect(res.status).toBe(502);
   });
 });
+
+describe('functions/api/ruleset/[name] edge cache', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  function stubCache() {
+    const store = new Map<string, Response>();
+    const cache = {
+      match: vi.fn(async (req: Request) => store.get(req.url)?.clone()),
+      put: vi.fn(async (req: Request, res: Response) => { store.set(req.url, res); }),
+    };
+    vi.stubGlobal('caches', { default: cache });
+    return cache;
+  }
+
+  it('caches the converted body per format and serves hits without refetching', async () => {
+    const cache = stubCache();
+    const fetchMock = vi.fn().mockImplementation(async () => new Response(PAYLOAD));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const first = await onRequestGet(makeContext('https://sub.test/api/ruleset/proxy?format=surge&x=1', 'proxy'));
+    expect(await first.text()).toBe('DOMAIN-SUFFIX,suffix.com\nDOMAIN,exact.com');
+    expect(cache.put.mock.calls[0][0].url).toBe('https://sub.test/api/ruleset/proxy?format=surge');
+
+    const second = await onRequestGet(makeContext('https://sub.test/api/ruleset/proxy?format=surge', 'proxy'));
+    expect(await second.text()).toBe('DOMAIN-SUFFIX,suffix.com\nDOMAIN,exact.com');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    // clash 格式是另一个缓存键
+    await onRequestGet(makeContext('https://sub.test/api/ruleset/proxy', 'proxy'));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not cache failures', async () => {
+    const cache = stubCache();
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('boom')));
+    await onRequestGet(makeContext('https://sub.test/api/ruleset/proxy', 'proxy'));
+    expect(cache.put).not.toHaveBeenCalled();
+  });
+});

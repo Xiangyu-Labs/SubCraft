@@ -22,8 +22,8 @@ describe('vless parser', () => {
     const link = 'vless://uuid@host:443?type=ws&path=/path&host=ws.example.com#Node';
     const node = parseVlessLink(link);
     expect(node.network).toBe('ws');
-    expect(node.wsPath).toBe('/path');
-    expect(node.wsHost).toBe('ws.example.com');
+    expect(node.path).toBe('/path');
+    expect(node.host).toBe('ws.example.com');
   });
 
   it('should parse vless with reality', () => {

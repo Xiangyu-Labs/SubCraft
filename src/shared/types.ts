@@ -39,68 +39,128 @@ export interface ClashDNSOptions {
   useFallbackFilter?: boolean;
 }
 
+// 手填的订阅信息（没有上游订阅时写进 subscription-userinfo）
+export interface ManualUserinfo {
+  total?: number;   // 字节
+  expire?: number;  // Unix 秒
+}
+
 // 订阅数据结构
 export interface SubscriptionData {
   links: string[];           // 代理链接数组
+  upstreams?: string[];      // 上游订阅地址，由服务端拉取并透传流量信息
   template: RuleTemplate;    // 规则模板
-  client: ClientType;        // 客户端类型
+  client?: ClientType;       // 仅旧链接携带；新链接按 User-Agent 判断
+  name?: string;             // 订阅名称，客户端里显示
   baseConfig?: ClashBaseConfig;  // 可选，有默认值
   dnsOptions?: ClashDNSOptions;  // 可选，有默认值
+  userinfo?: ManualUserinfo;
 }
 
-// Vless 节点配置
-export interface VlessNode {
+export type ProxyType = 'vless' | 'vmess' | 'trojan' | 'ss' | 'hysteria2' | 'tuic';
+
+export type TransportNetwork =
+  | 'tcp'
+  | 'ws'
+  | 'grpc'
+  | 'h2'
+  | 'http'
+  | 'httpupgrade'
+  | 'xhttp';
+
+interface BaseNode {
   name: string;
   server: string;
   port: number;
-  uuid: string;
-  network?: string;
-  tls?: boolean;
-  sni?: string;
-  alpn?: string;
-  flow?: string;
-  wsPath?: string;
-  wsHost?: string;
-  // Reality 协议
-  fingerprint?: string;
-  publicKey?: string;
-  shortId?: string;
-  // 其他
-  allowInsecure?: boolean;
-  serviceName?: string;
-  packetEncoding?: string;
 }
 
-// Clash 代理节点
+// TLS / Reality，vless、vmess、trojan 共用
+export interface TlsOptions {
+  tls?: boolean;
+  sni?: string;
+  alpn?: string;             // 逗号分隔，与分享链接一致
+  fingerprint?: string;      // uTLS 指纹
+  allowInsecure?: boolean;
+  publicKey?: string;        // Reality
+  shortId?: string;          // Reality
+}
+
+// 传输层，vless、vmess、trojan 共用
+export interface TransportOptions {
+  network?: TransportNetwork;
+  path?: string;             // ws / httpupgrade / h2 / xhttp
+  host?: string;             // ws / httpupgrade / h2 / xhttp
+  serviceName?: string;      // grpc
+  xhttpMode?: string;        // xhttp
+}
+
+export interface VlessNode extends BaseNode, TlsOptions, TransportOptions {
+  type: 'vless';
+  uuid: string;
+  flow?: string;
+  packetEncoding?: string;
+  encryption?: string;       // 非 none 时为 xray 的 VLESS Encryption
+}
+
+export interface VmessNode extends BaseNode, TlsOptions, TransportOptions {
+  type: 'vmess';
+  uuid: string;
+  alterId: number;
+  cipher: string;
+}
+
+export interface TrojanNode extends BaseNode, TlsOptions, TransportOptions {
+  type: 'trojan';
+  password: string;
+}
+
+export interface SsNode extends BaseNode {
+  type: 'ss';
+  cipher: string;
+  password: string;
+  // 仅支持 simple-obfs（obfs-local）
+  obfs?: 'http' | 'tls';
+  obfsHost?: string;
+}
+
+export interface Hysteria2Node extends BaseNode {
+  type: 'hysteria2';
+  password: string;
+  sni?: string;
+  alpn?: string;
+  allowInsecure?: boolean;
+  obfs?: string;
+  obfsPassword?: string;
+  ports?: string;            // 端口跳跃，如 20000-30000
+  pinSha256?: string;
+}
+
+export interface TuicNode extends BaseNode {
+  type: 'tuic';
+  uuid: string;
+  password: string;
+  sni?: string;
+  alpn?: string;
+  allowInsecure?: boolean;
+  congestionControl?: string;
+  udpRelayMode?: string;
+}
+
+export type ProxyNode =
+  | VlessNode
+  | VmessNode
+  | TrojanNode
+  | SsNode
+  | Hysteria2Node
+  | TuicNode;
+
+// Clash 代理节点：公共字段固定，协议字段按 mihomo 文档原样输出
 export interface ClashProxy {
   name: string;
   type: string;
   server: string;
   port: number;
-  uuid?: string;
-  password?: string;
-  cipher?: string;
-  network?: string;
-  udp?: boolean;
-  'packet-encoding'?: string;
-  tls?: boolean;
-  'skip-cert-verify'?: boolean;
-  servername?: string;
-  alpn?: string[];
-  'client-fingerprint'?: string;
-  flow?: string;
-  'reality-opts'?: {
-    'public-key': string;
-    'short-id'?: string;
-  };
-  'grpc-opts'?: {
-    'grpc-service-name'?: string;
-    'grpc-mode'?: string;
-  };
-  'ws-opts'?: {
-    path?: string;
-    headers?: Record<string, string>;
-  };
+  [key: string]: unknown;
 }
 
 // DNS 配置（用于 YAML 生成）
@@ -132,6 +192,16 @@ export interface ClashRuleProvider {
   interval: number;
 }
 
+export interface ClashProxyGroup {
+  name: string;
+  type: 'select' | 'url-test' | 'fallback';
+  proxies: string[];
+  url?: string;
+  interval?: number;
+  tolerance?: number;
+  lazy?: boolean;
+}
+
 // Clash 配置
 export interface ClashConfig {
   'mixed-port': number;
@@ -151,11 +221,7 @@ export interface ClashConfig {
   };
   dns: ClashDNSConfig;
   proxies: ClashProxy[];
-  'proxy-groups': Array<{
-    name: string;
-    type: string;
-    proxies: string[];
-  }>;
+  'proxy-groups': ClashProxyGroup[];
   'rule-providers'?: Record<string, ClashRuleProvider>;
   rules: string[];
 }

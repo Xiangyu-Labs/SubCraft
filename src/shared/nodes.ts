@@ -1,4 +1,4 @@
-import type { VlessNode } from './types';
+import type { ProxyNode } from './types';
 
 const IPV4 = /^(?:\d{1,3}\.){3}\d{1,3}$/;
 
@@ -6,7 +6,7 @@ export function isIpLiteral(host: string): boolean {
   return IPV4.test(host) || host.includes(':');
 }
 
-export function uniqueServers(nodes: VlessNode[]): string[] {
+export function uniqueServers(nodes: ProxyNode[]): string[] {
   return [...new Set(nodes.map((n) => n.server).filter(Boolean))];
 }
 
@@ -18,7 +18,7 @@ export function uniqueServers(nodes: VlessNode[]): string[] {
  * 用 DOMAIN 精确匹配而非 DOMAIN-SUFFIX：节点若挂在自己也会浏览的裸域上，
  * SUFFIX 会误伤整个站点。
  */
-export function buildNodeDirectRules(nodes: VlessNode[]): string[] {
+export function buildNodeDirectRules(nodes: ProxyNode[]): string[] {
   return uniqueServers(nodes).map((host) => {
     if (!isIpLiteral(host)) {
       return `DOMAIN,${host},DIRECT`;
@@ -30,7 +30,7 @@ export function buildNodeDirectRules(nodes: VlessNode[]): string[] {
 }
 
 /** 节点域名要进 fake-ip-filter，保证任何路径拿到的都是真实 IP */
-export function buildNodeFakeIpFilter(nodes: VlessNode[]): string[] {
+export function buildNodeFakeIpFilter(nodes: ProxyNode[]): string[] {
   return uniqueServers(nodes)
     .filter((host) => !isIpLiteral(host))
     .flatMap((host) => [host, `+.${host}`]);
@@ -44,15 +44,24 @@ export const PRIVATE_DIRECT_RULES = [
   'IP-CIDR,100.64.0.0/10,DIRECT,no-resolve',
 ];
 
+export const GROUP_PROXY = 'PROXY';
+export const GROUP_AUTO = '自动选择';
+export const GROUP_FALLBACK = '故障转移';
+/** 测速请求经由节点发出，不受国内直连可达性约束 */
+export const HEALTH_CHECK_URL = 'https://www.gstatic.com/generate_204';
+
+const RESERVED_NAMES = [GROUP_PROXY, GROUP_AUTO, GROUP_FALLBACK, 'DIRECT', 'REJECT', 'REJECT-DROP', 'PASS', 'GLOBAL'];
+
 /**
  * mihomo 对重名 proxy 直接 fatal（proxy XXX is the duplicate name），
  * 而解析器在 hash 为空时一律回落成 'Unnamed'——两个没写备注的节点就能
- * 炸掉整份配置。逗号也要去掉，它会破坏 Shadowrocket 的 .conf 行格式。
+ * 炸掉整份配置。逗号和等号也要去掉，它们会破坏 Shadowrocket 的 .conf 行格式。
  */
-export function dedupeNodeNames(nodes: VlessNode[]): VlessNode[] {
-  const used = new Set<string>();
+export function dedupeNodeNames(nodes: ProxyNode[]): ProxyNode[] {
+  // 预先占住策略组与内置策略的名字，节点撞上它们同样会被 mihomo 拒绝
+  const used = new Set<string>(RESERVED_NAMES);
   return nodes.map((node) => {
-    const base = (node.name || '').trim().replace(/,/g, ' ').trim() || 'Unnamed';
+    const base = (node.name || '').trim().replace(/[,=]/g, ' ').trim() || 'Unnamed';
     let name = base;
     let i = 1;
     // while 而非 if：防止 "A" 与既有的 "A #2" 二次撞名
@@ -61,6 +70,6 @@ export function dedupeNodeNames(nodes: VlessNode[]): VlessNode[] {
       name = `${base} #${i}`;
     }
     used.add(name);
-    return name === node.name ? node : { ...node, name };
+    return name === node.name ? node : ({ ...node, name } as ProxyNode);
   });
 }

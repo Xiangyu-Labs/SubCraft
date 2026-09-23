@@ -7,13 +7,14 @@ const ORIGIN = 'https://sub.test';
 describe('clash generator', () => {
   const testNodes: VlessNode[] = [
     {
+      type: 'vless',
       name: 'Node1',
       server: 'example.com',
       port: 443,
       uuid: 'uuid-123',
       tls: true,
       network: 'ws',
-      wsPath: '/path',
+      path: '/path',
     },
   ];
 
@@ -67,8 +68,8 @@ describe('clash generator', () => {
 
   it('should create proxy group with all nodes', () => {
     const nodes: VlessNode[] = [
-      { name: 'Node1', server: 'host1', port: 443, uuid: 'uuid1' },
-      { name: 'Node2', server: 'host2', port: 443, uuid: 'uuid2' },
+      { type: 'vless', name: 'Node1', server: 'host1', port: 443, uuid: 'uuid1' },
+      { type: 'vless', name: 'Node2', server: 'host2', port: 443, uuid: 'uuid2' },
     ];
     const subscriptionData: SubscriptionData = {
       links: [],
@@ -188,8 +189,8 @@ describe('clash generator', () => {
     it('sends node traffic direct, ahead of everything else', () => {
       const config = generateClashConfig(
         [
-          { name: 'A', server: 'vps.example.com', port: 443, uuid: 'u1' },
-          { name: 'B', server: '1.2.3.4', port: 443, uuid: 'u2' },
+          { type: 'vless', name: 'A', server: 'vps.example.com', port: 443, uuid: 'u1' },
+          { type: 'vless', name: 'B', server: '1.2.3.4', port: 443, uuid: 'u2' },
         ],
         { links: [], template: 'whitelist', client: 'clash' },
         ORIGIN,
@@ -202,7 +203,7 @@ describe('clash generator', () => {
 
     it('does not put IP-literal nodes in fake-ip-filter', () => {
       const config = generateClashConfig(
-        [{ name: 'B', server: '1.2.3.4', port: 443, uuid: 'u2' }],
+        [{ type: 'vless', name: 'B', server: '1.2.3.4', port: 443, uuid: 'u2' }],
         { links: [], template: 'whitelist', client: 'clash' },
         ORIGIN,
       );
@@ -222,6 +223,7 @@ describe('clash generator', () => {
 
   it('should generate reality vless proxy', () => {
     const realityNode: VlessNode = {
+      type: 'vless',
       name: 'RealityNode',
       server: 'vps.example.com',
       port: 54939,
@@ -267,6 +269,7 @@ describe('clash generator', () => {
 
   it('should generate grpc vless proxy', () => {
     const grpcNode: VlessNode = {
+      type: 'vless',
       name: 'GrpcNode',
       server: 'host.com',
       port: 443,
@@ -291,6 +294,7 @@ describe('clash generator', () => {
 
   it('should set skip-cert-verify from allowInsecure', () => {
     const insecureNode: VlessNode = {
+      type: 'vless',
       name: 'InsecureNode',
       server: 'host.com',
       port: 443,

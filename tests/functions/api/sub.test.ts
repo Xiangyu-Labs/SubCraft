@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { onRequestGet } from '../../../functions/api/sub';
 import { encodeSubscriptionData } from '@/shared/encoder';
 import type { SubscriptionData } from '@/shared/types';
@@ -147,5 +147,94 @@ describe('functions/api/sub', () => {
       makeContext(`https://app.test/api/sub?data=${encodeSubscriptionData(data)}`),
     );
     expect(res.headers.get('Profile-Update-Interval')).toBe('24');
+  });
+});
+
+describe('functions/api/sub headers & clients', () => {
+  const LINK = 'vless://uuid@example.com:443?encryption=none#N';
+  const url = (data: SubscriptionData, extra = '') =>
+    `https://app.test/api/sub?data=${encodeSubscriptionData(data)}${extra}`;
+  const withUA = (u: string, ua: string) =>
+    ({ request: new Request(u, { headers: { 'User-Agent': ua } }) }) as Parameters<typeof onRequestGet>[0];
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('never lets a response with credentials be cached', async () => {
+    const res = await onRequestGet(makeContext(url({ links: [LINK], template: 'blacklist' })));
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store');
+  });
+
+  it('omits subscription-userinfo when there is no data source', async () => {
+    const res = await onRequestGet(makeContext(url({ links: [LINK], template: 'blacklist' })));
+    expect(res.headers.get('Subscription-Userinfo')).toBeNull();
+  });
+
+  it('uses manually entered total / expire', async () => {
+    const res = await onRequestGet(makeContext(url({
+      links: [LINK], template: 'blacklist', userinfo: { total: 1000, expire: 1900000000 },
+    })));
+    expect(res.headers.get('Subscription-Userinfo')).toBe('upload=0; download=0; total=1000; expire=1900000000');
+  });
+
+  it('sends the profile title and filename', async () => {
+    const res = await onRequestGet(makeContext(url({ links: [LINK], template: 'blacklist', name: '我的' })));
+    expect(res.headers.get('Profile-Title')).toBe('base64:5oiR55qE');
+    expect(res.headers.get('Content-Disposition')).toContain("filename*=UTF-8''%E6%88%91%E7%9A%84.yaml");
+  });
+
+  it('picks the format from the user agent, with ?client= and legacy data taking precedence', async () => {
+    const data: SubscriptionData = { links: [LINK], template: 'blacklist' };
+    const sr = await onRequestGet(withUA(url(data), 'Shadowrocket/2070 CFNetwork/1485'));
+    expect(await sr.text()).toContain('[Proxy]');
+
+    const cmfa = await onRequestGet(withUA(url(data), 'ClashMetaForAndroid/2.11.1.Meta'));
+    expect(await cmfa.text()).toContain('proxies:');
+
+    const forced = await onRequestGet(withUA(url(data, '&client=clash'), 'Shadowrocket/2070'));
+    expect(await forced.text()).toContain('proxies:');
+
+    const legacy = await onRequestGet(withUA(url({ ...data, client: 'shadowrocket' }), 'clash.meta'));
+    expect(await legacy.text()).toContain('[Proxy]');
+  });
+
+  it('merges upstream nodes and passes their traffic through', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(
+      'trojan://pw@up.example.com:443#Upstream',
+      { headers: { 'Subscription-Userinfo': 'upload=5; download=6; total=100; expire=1800000000' } },
+    )));
+    const res = await onRequestGet(makeContext(url({
+      links: [LINK], upstreams: ['https://panel.example.com/sub/x'], template: 'blacklist',
+      userinfo: { total: 1 },
+    })));
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Subscription-Userinfo')).toBe('upload=5; download=6; total=100; expire=1800000000');
+    expect(res.headers.get('Profile-Update-Interval')).toBe('6');
+    const body = await res.text();
+    expect(body).toContain('Upstream');
+    expect(body).toMatch(/name: '?N'?\n/);
+  });
+
+  it('returns 502 with reasons when every upstream fails and there are no local links', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('denied', { status: 403 })));
+    const res = await onRequestGet(makeContext(url({
+      links: [], upstreams: ['https://panel.example.com/sub/x'], template: 'blacklist',
+    })));
+    expect(res.status).toBe(502);
+    const json = await res.json() as { details: string[] };
+    expect(json.details[0]).toMatch(/403/);
+  });
+
+  it('still serves local nodes when an upstream fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('down')));
+    const res = await onRequestGet(makeContext(url({
+      links: [LINK], upstreams: ['https://panel.example.com/sub/x'], template: 'blacklist',
+    })));
+    expect(res.status).toBe(200);
+  });
+
+  it('rejects an unknown template with 400', async () => {
+    const res = await onRequestGet(makeContext(url({ links: [LINK], template: 'nope' as never })));
+    expect(res.status).toBe(400);
   });
 });

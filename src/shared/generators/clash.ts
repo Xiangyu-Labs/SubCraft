@@ -1,7 +1,11 @@
 import type {
+  ProxyNode,
   VlessNode,
+  VmessNode,
+  TrojanNode,
   ClashConfig,
   ClashProxy,
+  ClashProxyGroup,
   ClashRuleProvider,
   SubscriptionData,
   ClashDNSOptions,
@@ -16,6 +20,10 @@ import {
 import {
   buildNodeDirectRules,
   buildNodeFakeIpFilter,
+  GROUP_AUTO,
+  GROUP_FALLBACK,
+  GROUP_PROXY,
+  HEALTH_CHECK_URL,
   PRIVATE_DIRECT_RULES,
 } from '../nodes';
 
@@ -56,71 +64,191 @@ export function createDNSConfig(
   return config;
 }
 
-function vlessToClashProxy(node: VlessNode): ClashProxy {
-  const proxy: ClashProxy = {
-    name: node.name,
-    type: 'vless',
-    server: node.server,
-    port: node.port,
-    uuid: node.uuid,
-    udp: true,
-    'packet-encoding': node.packetEncoding || 'xudp',
-  };
+type TlsTransportNode = VlessNode | VmessNode | TrojanNode;
 
-  if (node.network) {
-    proxy.network = node.network;
-  }
+/** ws 路径里的 ?ed=2048 是 xray 的 early data 写法，mihomo 要拆成独立字段 */
+function splitEarlyData(path: string): { path: string; ed?: number } {
+  const m = path.match(/[?&]ed=(\d+)/);
+  if (!m) return { path };
+  const cleaned = path.replace(/([?&])ed=\d+&?/, '$1').replace(/[?&]$/, '');
+  return { path: cleaned || '/', ed: parseInt(m[1], 10) };
+}
 
-  if (node.tls) {
+function applyTls(proxy: ClashProxy, node: TlsTransportNode) {
+  if (!node.tls) return;
+  if (node.type !== 'trojan') {
     proxy.tls = true;
-    proxy['skip-cert-verify'] = node.allowInsecure ?? false;
-    if (node.sni) {
-      proxy.servername = node.sni;
-    }
-    if (node.alpn) {
-      proxy.alpn = node.alpn.split(',');
-    }
   }
-
+  // trojan 的 SNI 字段叫 sni，vless / vmess 叫 servername
+  if (node.sni) {
+    proxy[node.type === 'trojan' ? 'sni' : 'servername'] = node.sni;
+  }
+  proxy['skip-cert-verify'] = node.allowInsecure ?? false;
+  if (node.alpn) {
+    proxy.alpn = node.alpn.split(',');
+  }
   if (node.fingerprint) {
     proxy['client-fingerprint'] = node.fingerprint;
   }
-
-  if (node.flow) {
-    proxy.flow = node.flow;
-  }
-
   if (node.publicKey) {
     proxy['reality-opts'] = {
       'public-key': node.publicKey,
+      ...(node.shortId ? { 'short-id': node.shortId } : {}),
     };
-    if (node.shortId) {
-      proxy['reality-opts']['short-id'] = node.shortId;
-    }
+  }
+}
+
+function applyTransport(proxy: ClashProxy, node: TlsTransportNode) {
+  const network = node.network;
+  if (!network || network === 'tcp') {
+    if (network) proxy.network = network;
+    return;
   }
 
-  if (node.network === 'ws') {
-    proxy['ws-opts'] = {
-      path: node.wsPath || '/',
-    };
-    if (node.wsHost) {
-      proxy['ws-opts'].headers = {
-        Host: node.wsHost,
+  // mihomo 的 trojan 只支持 ws / grpc，xhttp 只支持 vless
+  if (node.type === 'trojan' && network !== 'ws' && network !== 'grpc') {
+    throw new Error(`mihomo 的 trojan 不支持 ${network} 传输`);
+  }
+  if (network === 'xhttp' && node.type !== 'vless') {
+    throw new Error('mihomo 的 xhttp 仅支持 vless');
+  }
+
+  const headers = node.host ? { Host: node.host } : undefined;
+  switch (network) {
+    case 'ws':
+    case 'httpupgrade': {
+      const { path, ed } = splitEarlyData(node.path || '/');
+      proxy.network = 'ws';
+      proxy['ws-opts'] = {
+        path,
+        ...(headers ? { headers } : {}),
+        ...(network === 'httpupgrade' ? { 'v2ray-http-upgrade': true } : {}),
+        ...(ed ? { 'max-early-data': ed, 'early-data-header-name': 'Sec-WebSocket-Protocol' } : {}),
       };
+      break;
     }
+    case 'h2':
+      proxy.network = 'h2';
+      proxy['h2-opts'] = {
+        path: node.path || '/',
+        ...(node.host ? { host: node.host.split(',') } : {}),
+      };
+      break;
+    case 'http':
+      proxy.network = 'http';
+      proxy['http-opts'] = {
+        path: [node.path || '/'],
+        ...(node.host ? { headers: { Host: node.host.split(',') } } : {}),
+      };
+      break;
+    case 'grpc':
+      proxy.network = 'grpc';
+      if (node.serviceName) {
+        proxy['grpc-opts'] = { 'grpc-service-name': node.serviceName };
+      }
+      break;
+    case 'xhttp':
+      proxy.network = 'xhttp';
+      proxy['xhttp-opts'] = {
+        path: node.path || '/',
+        ...(node.host ? { host: node.host } : {}),
+        ...(node.xhttpMode ? { mode: node.xhttpMode } : {}),
+      };
+      break;
   }
+}
 
-  if (node.network === 'grpc' && node.serviceName) {
-    proxy['grpc-opts'] = {
-      'grpc-service-name': node.serviceName,
-    };
+function base(node: ProxyNode): ClashProxy {
+  return { name: node.name, type: node.type, server: node.server, port: node.port };
+}
+
+export function toClashProxy(node: ProxyNode): ClashProxy {
+  const proxy = base(node);
+
+  switch (node.type) {
+    case 'vless':
+      proxy.uuid = node.uuid;
+      proxy.udp = true;
+      proxy['packet-encoding'] = node.packetEncoding || 'xudp';
+      if (node.flow) proxy.flow = node.flow;
+      if (node.encryption) proxy.encryption = node.encryption;
+      applyTls(proxy, node);
+      applyTransport(proxy, node);
+      break;
+
+    case 'vmess':
+      proxy.uuid = node.uuid;
+      proxy.alterId = node.alterId;
+      proxy.cipher = node.cipher;
+      proxy.udp = true;
+      applyTls(proxy, node);
+      applyTransport(proxy, node);
+      break;
+
+    case 'trojan':
+      proxy.password = node.password;
+      proxy.udp = true;
+      applyTls(proxy, node);
+      applyTransport(proxy, node);
+      break;
+
+    case 'ss':
+      proxy.cipher = node.cipher;
+      proxy.password = node.password;
+      proxy.udp = true;
+      if (node.obfs) {
+        proxy.plugin = 'obfs';
+        proxy['plugin-opts'] = {
+          mode: node.obfs,
+          ...(node.obfsHost ? { host: node.obfsHost } : {}),
+        };
+      }
+      break;
+
+    case 'hysteria2':
+      proxy.password = node.password;
+      if (node.ports) proxy.ports = node.ports;
+      if (node.sni) proxy.sni = node.sni;
+      proxy['skip-cert-verify'] = node.allowInsecure ?? false;
+      if (node.alpn) proxy.alpn = node.alpn.split(',');
+      if (node.obfs) {
+        proxy.obfs = node.obfs;
+        if (node.obfsPassword) proxy['obfs-password'] = node.obfsPassword;
+      }
+      if (node.pinSha256) {
+        proxy.fingerprint = node.pinSha256.replace(/:/g, '').toLowerCase();
+      }
+      break;
+
+    case 'tuic':
+      proxy.uuid = node.uuid;
+      proxy.password = node.password;
+      if (node.sni) proxy.sni = node.sni;
+      proxy['skip-cert-verify'] = node.allowInsecure ?? false;
+      proxy.alpn = (node.alpn || 'h3').split(',');
+      if (node.congestionControl) proxy['congestion-controller'] = node.congestionControl;
+      if (node.udpRelayMode) proxy['udp-relay-mode'] = node.udpRelayMode;
+      break;
   }
 
   return proxy;
 }
 
+/** 两个及以上节点时追加自动选择 / 故障转移；PROXY 名字不变，模板规则无需改动 */
+export function buildProxyGroups(names: string[]): ClashProxyGroup[] {
+  if (names.length < 2) {
+    return [{ name: GROUP_PROXY, type: 'select', proxies: names }];
+  }
+  const probe = { url: HEALTH_CHECK_URL, interval: 300, lazy: true };
+  return [
+    { name: GROUP_PROXY, type: 'select', proxies: [GROUP_AUTO, GROUP_FALLBACK, ...names] },
+    { name: GROUP_AUTO, type: 'url-test', proxies: names, ...probe, tolerance: 50 },
+    { name: GROUP_FALLBACK, type: 'fallback', proxies: names, ...probe },
+  ];
+}
+
 export function generateClashConfig(
-  nodes: VlessNode[],
+  allNodes: ProxyNode[],
   subscriptionData: SubscriptionData,
   origin: string,
 ): ClashConfig {
@@ -135,7 +263,20 @@ export function generateClashConfig(
     throw new Error(`Unknown rule template: ${subscriptionData.template}`);
   }
 
-  const proxies = nodes.map(vlessToClashProxy);
+  // 个别节点无法用 mihomo 表达时跳过它，而不是让整份配置生成失败
+  const proxies: ClashProxy[] = [];
+  const nodes: ProxyNode[] = [];
+  for (const node of allNodes) {
+    try {
+      proxies.push(toClashProxy(node));
+      nodes.push(node);
+    } catch (err) {
+      console.warn(`Skipped node for clash: ${err instanceof Error ? err.message : err}`);
+    }
+  }
+  if (proxies.length === 0) {
+    throw new Error('No node can be expressed in clash config');
+  }
   const proxyNames = proxies.map((p) => p.name);
 
   // 规则集交给客户端自取：内联展开会产出几十万条规则、MB 级配置，
@@ -186,13 +327,7 @@ export function generateClashConfig(
     },
     dns: createDNSConfig(dnsOptions, buildNodeFakeIpFilter(nodes)),
     proxies,
-    'proxy-groups': [
-      {
-        name: 'PROXY',
-        type: 'select',
-        proxies: proxyNames,
-      },
-    ],
+    'proxy-groups': buildProxyGroups(proxyNames),
     rules: [
       ...buildNodeDirectRules(nodes),
       ...PRIVATE_DIRECT_RULES,

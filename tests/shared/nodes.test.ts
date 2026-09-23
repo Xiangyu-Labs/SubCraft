@@ -9,6 +9,7 @@ import {
 import type { VlessNode } from '@/shared/types';
 
 const node = (over: Partial<VlessNode>): VlessNode => ({
+  type: 'vless',
   name: 'N',
   server: 'example.com',
   port: 443,
@@ -67,22 +68,22 @@ describe('buildNodeFakeIpFilter', () => {
 
 describe('dedupeNodeNames', () => {
   it('leaves distinct names alone', () => {
-    const nodes = [node({ name: 'A' }), node({ name: 'B' })];
+    const nodes = [node({ type: 'vless', name: 'A' }), node({ type: 'vless', name: 'B' })];
     expect(dedupeNodeNames(nodes).map((n) => n.name)).toEqual(['A', 'B']);
   });
 
   it('suffixes collisions so Clash will load the config', () => {
-    const nodes = [node({ name: 'A' }), node({ name: 'A' }), node({ name: 'A' })];
+    const nodes = [node({ type: 'vless', name: 'A' }), node({ type: 'vless', name: 'A' }), node({ type: 'vless', name: 'A' })];
     expect(dedupeNodeNames(nodes).map((n) => n.name)).toEqual(['A', 'A #2', 'A #3']);
   });
 
   it('does not collide a second time with a pre-existing suffix', () => {
-    const nodes = [node({ name: 'A' }), node({ name: 'A #2' }), node({ name: 'A' })];
+    const nodes = [node({ type: 'vless', name: 'A' }), node({ type: 'vless', name: 'A #2' }), node({ type: 'vless', name: 'A' })];
     expect(dedupeNodeNames(nodes).map((n) => n.name)).toEqual(['A', 'A #2', 'A #3']);
   });
 
   it('falls back to Unnamed and strips commas', () => {
-    const nodes = [node({ name: '' }), node({ name: '  ' }), node({ name: 'a,b' })];
+    const nodes = [node({ type: 'vless', name: '' }), node({ type: 'vless', name: '  ' }), node({ type: 'vless', name: 'a,b' })];
     expect(dedupeNodeNames(nodes).map((n) => n.name)).toEqual([
       'Unnamed',
       'Unnamed #2',

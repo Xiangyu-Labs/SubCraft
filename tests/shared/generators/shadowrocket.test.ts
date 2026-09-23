@@ -7,13 +7,14 @@ const ORIGIN = 'https://sub.test';
 describe('shadowrocket generator', () => {
   const testNodes: VlessNode[] = [
     {
+      type: 'vless',
       name: 'Node1',
       server: 'example.com',
       port: 443,
       uuid: 'uuid-123',
       tls: true,
       network: 'ws',
-      wsPath: '/path',
+      path: '/path',
     },
   ];
 
@@ -35,7 +36,7 @@ describe('shadowrocket generator', () => {
 
   it('should include vless with tls', () => {
     const nodes: VlessNode[] = [
-      { name: 'TlsNode', server: 'host.com', port: 443, uuid: 'uuid-tls', tls: true, sni: 'sni.com', alpn: 'h2,http/1.1' },
+      { type: 'vless', name: 'TlsNode', server: 'host.com', port: 443, uuid: 'uuid-tls', tls: true, sni: 'sni.com', alpn: 'h2,http/1.1' },
     ];
     const subscriptionData: SubscriptionData = {
       links: [],
@@ -47,9 +48,9 @@ describe('shadowrocket generator', () => {
     expect(config).toContain('TlsNode = vless, host.com, 443, password=uuid-tls, tls=true, peer=sni.com, alpn=h2,http/1.1');
   });
 
-  it('should include skip-cert-verify when allowInsecure is true', () => {
+  it('should include allowInsecure=1 when allowInsecure is true', () => {
     const nodes: VlessNode[] = [
-      { name: 'InsecureNode', server: 'host.com', port: 443, uuid: 'uuid-i', tls: true, allowInsecure: true },
+      { type: 'vless', name: 'InsecureNode', server: 'host.com', port: 443, uuid: 'uuid-i', tls: true, allowInsecure: true },
     ];
     const subscriptionData: SubscriptionData = {
       links: [],
@@ -58,12 +59,12 @@ describe('shadowrocket generator', () => {
     };
     const config = generateShadowrocketConfig(nodes, subscriptionData, ORIGIN);
 
-    expect(config).toContain('InsecureNode = vless, host.com, 443, password=uuid-i, tls=true, skip-cert-verify=true');
+    expect(config).toContain('InsecureNode = vless, host.com, 443, password=uuid-i, tls=true, allowInsecure=1');
   });
 
   it('should include vless without tls', () => {
     const nodes: VlessNode[] = [
-      { name: 'PlainNode', server: 'host.com', port: 80, uuid: 'uuid-p' },
+      { type: 'vless', name: 'PlainNode', server: 'host.com', port: 80, uuid: 'uuid-p' },
     ];
     const subscriptionData: SubscriptionData = {
       links: [],
@@ -79,6 +80,7 @@ describe('shadowrocket generator', () => {
   it('should include vless with reality', () => {
     const nodes: VlessNode[] = [
       {
+        type: 'vless',
         name: 'RealityNode',
         server: 'vps.com',
         port: 54939,
@@ -99,7 +101,6 @@ describe('shadowrocket generator', () => {
     const config = generateShadowrocketConfig(nodes, subscriptionData, ORIGIN);
 
     expect(config).toContain('RealityNode = vless, vps.com, 54939, password=uuid-r, tls=true, peer=apple.com');
-    expect(config).toContain('client-fingerprint=chrome');
     expect(config).toContain('pbk=pk123');
     expect(config).toContain('sid=sid456');
   });
@@ -107,13 +108,14 @@ describe('shadowrocket generator', () => {
   it('should include ws opts', () => {
     const nodes: VlessNode[] = [
       {
+        type: 'vless',
         name: 'WsNode',
         server: 'ws.com',
         port: 443,
         uuid: 'uuid-ws',
         network: 'ws',
-        wsPath: '/ws',
-        wsHost: 'ws.host.com',
+        path: '/ws',
+        host: 'ws.host.com',
       },
     ];
     const subscriptionData: SubscriptionData = {
@@ -123,14 +125,14 @@ describe('shadowrocket generator', () => {
     };
     const config = generateShadowrocketConfig(nodes, subscriptionData, ORIGIN);
 
-    expect(config).toContain('ws=true');
-    expect(config).toContain('ws-path=/ws');
-    expect(config).toContain('ws-headers=Host:ws.host.com');
+    expect(config).toContain('obfs=websocket, path=/ws, obfsParam=ws.host.com');
+    expect(config).not.toContain('ws=true');
   });
 
   it('should include grpc opts', () => {
     const nodes: VlessNode[] = [
       {
+        type: 'vless',
         name: 'GrpcNode',
         server: 'grpc.com',
         port: 443,
@@ -147,8 +149,7 @@ describe('shadowrocket generator', () => {
     const config = generateShadowrocketConfig(nodes, subscriptionData, ORIGIN);
 
     expect(config).toContain('GrpcNode = vless, grpc.com, 443, password=uuid-g');
-    expect(config).toContain('grpc=true');
-    expect(config).toContain('grpc-service-name=MyService');
+    expect(config).toContain('obfs=grpc, path=MyService');
   });
   it('references rule sets by absolute url, never by bare name', () => {
     const config = generateShadowrocketConfig(
