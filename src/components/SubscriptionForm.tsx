@@ -103,7 +103,7 @@ export function SubscriptionForm() {
 
   return (
     <div className="space-y-6">
-      <Section label="links" hint="每行一个：vless / vmess / trojan / ss / hysteria2 / tuic，http(s) 开头的行视为上游订阅">
+      <Section label="links">
         <textarea
           value={links}
           onChange={(e) => setLinks(e.target.value)}
@@ -133,12 +133,11 @@ export function SubscriptionForm() {
             </label>
           ))}
         </div>
-        <p className="text-xs text-muted">{ruleTemplates[template].description}</p>
       </Section>
 
       <details className="group">
         <summary className="cursor-pointer select-none text-accent">
-          options <span className="text-xs text-muted">名称、端口、模式、手填流量</span>
+          options
         </summary>
         <div className="mt-2">
           <AdvancedOptions
@@ -150,7 +149,7 @@ export function SubscriptionForm() {
 
       <details>
         <summary className="cursor-pointer select-none text-accent">
-          import <span className="text-xs text-muted">粘贴已生成的订阅链接，回填后继续编辑</span>
+          import
         </summary>
         <div className="mt-2">
           <ImportBox onImport={handleImport} />

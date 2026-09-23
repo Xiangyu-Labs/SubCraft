@@ -32,7 +32,6 @@ export function NodePreview({ entries }: { entries: LinkEntry[] }) {
               <>
                 <span className="w-16 shrink-0 text-accent">upstream</span>
                 <span className="truncate">{entry.raw}</span>
-                <span className="ml-auto shrink-0 text-muted">服务端拉取</span>
               </>
             )}
             {entry.kind === 'error' && (

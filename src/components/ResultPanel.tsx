@@ -41,9 +41,6 @@ export function ResultPanel({ url }: { url: string }) {
             {showQr ? '收起二维码' : '二维码'}
           </button>
         )}
-        <span className="text-xs text-muted">
-          {url.length} 字符 · Clash / mihomo / Shadowrocket 通用，按 UA 自动输出对应格式
-        </span>
       </div>
       {showQr && qrDataUrl && (
         // 二维码保持白底，暗色下也能扫
