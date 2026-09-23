@@ -10,14 +10,13 @@ import { fetchUpstream, formatUserinfo, mergeUserinfo, type Userinfo } from './u
 export const DEFAULT_PROFILE_NAME = 'SubCraft';
 
 /**
- * 优先级：?client= 显式指定 > 旧链接里编码的 client > User-Agent。
+ * 优先级：?client= 显式指定 > User-Agent。
  * Shadowrocket 的 UA 形如 `Shadowrocket/2070 CFNetwork/...`；其余一律按 Clash
  * （mihomo / CMFA / Clash Verge / Stash 都吃 Clash YAML）。
  */
-export function resolveClient(request: Request, data: SubscriptionData): ClientType {
+export function resolveClient(request: Request): ClientType {
   const param = new URL(request.url).searchParams.get('client');
   if (param === 'clash' || param === 'shadowrocket') return param;
-  if (data.client) return data.client;
   const ua = request.headers.get('user-agent') || '';
   return /shadowrocket/i.test(ua) ? 'shadowrocket' : 'clash';
 }
@@ -71,7 +70,7 @@ export async function renderSubscription(
 
   // 重名会让 Clash 拒绝加载整份配置，两个客户端都要先过这一步
   const nodes = dedupeNodeNames(collected);
-  const client = resolveClient(request, data);
+  const client = resolveClient(request);
   const name = data.name?.trim() || DEFAULT_PROFILE_NAME;
   const ext = client === 'shadowrocket' ? 'conf' : 'yaml';
 

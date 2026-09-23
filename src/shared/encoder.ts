@@ -1,19 +1,17 @@
 import pako from 'pako';
-import type { ClashBaseConfig, ClientType, SubscriptionData } from './types';
+import type { ClashBaseConfig, SubscriptionData } from './types';
 import { base64ToBytes, bytesToBase64Url } from './base64';
 import { DEFAULT_BASE_CONFIG } from './defaults';
 import { ruleTemplates } from './rules';
 
 /**
- * 链接格式 v2：短键 JSON + deflateRaw，省略等于默认值的字段。
+ * 链接格式：短键 JSON + deflateRaw，省略等于默认值的字段。
  * 节点凭据是高熵数据压不动，省下的主要是键名、默认值和 gzip 头。
- * v1（gzip + 完整 JSON）靠 gzip 魔数 1f 8b 区分，旧链接继续可用。
  */
 interface CompactData {
   l?: string[];
   u?: string[];
   t: string;
-  c?: ClientType;
   n?: string;
   b?: Partial<ClashBaseConfig>;
   d?: SubscriptionData['dnsOptions'];
@@ -35,7 +33,6 @@ function toCompact(data: SubscriptionData): CompactData {
   const c: CompactData = { t: data.template };
   if (data.links.length) c.l = data.links;
   if (data.upstreams?.length) c.u = data.upstreams;
-  if (data.client) c.c = data.client;
   if (data.name) c.n = data.name;
   const b = diffBaseConfig(data.baseConfig);
   if (b) c.b = b;
@@ -50,7 +47,6 @@ function fromCompact(c: CompactData): SubscriptionData {
     template: c.t as SubscriptionData['template'],
   };
   if (c.u) data.upstreams = c.u;
-  if (c.c) data.client = c.c;
   if (c.n) data.name = c.n;
   if (c.b) data.baseConfig = { ...DEFAULT_BASE_CONFIG, ...c.b };
   if (c.d) data.dnsOptions = c.d;
@@ -66,9 +62,6 @@ export function encodeSubscriptionData(data: SubscriptionData): string {
 export function decodeSubscriptionData(encoded: string): SubscriptionData {
   try {
     const bytes = base64ToBytes(encoded);
-    if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
-      return JSON.parse(pako.ungzip(bytes, { to: 'string' })) as SubscriptionData;
-    }
     return fromCompact(JSON.parse(pako.inflateRaw(bytes, { to: 'string' })) as CompactData);
   } catch {
     throw new Error('Invalid encoded data');
@@ -101,9 +94,6 @@ export function validateSubscriptionData(raw: unknown): SubscriptionData {
   }
   if (typeof data.template !== 'string' || !ruleTemplates[data.template]) {
     throw new Error(`Unknown rule template: ${data.template}`);
-  }
-  if (data.client !== undefined && data.client !== 'clash' && data.client !== 'shadowrocket') {
-    throw new Error(`Unknown client: ${data.client}`);
   }
   if (data.name !== undefined && (typeof data.name !== 'string' || data.name.length > 64)) {
     throw new Error('Invalid name');

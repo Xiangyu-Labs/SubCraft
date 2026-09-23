@@ -44,8 +44,6 @@ export function SubscriptionForm() {
   const [links, setLinks] = useState('');
   const [template, setTemplate] = useState<RuleTemplate>('blacklist');
   const [advanced, setAdvanced] = useState<AdvancedValues>(DEFAULT_ADVANCED);
-  // 导入的旧链接里可能带 dnsOptions，界面不编辑它，但重新生成时要原样保留
-  const [dnsOptions, setDnsOptions] = useState<SubscriptionData['dnsOptions']>();
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [subscriptionUrl, setSubscriptionUrl] = useState('');
   const [error, setError] = useState('');
@@ -62,7 +60,6 @@ export function SubscriptionForm() {
       totalGB: data.userinfo?.total ? String(+(data.userinfo.total / GB).toFixed(2)) : '',
       expireDate: data.userinfo?.expire ? toDateInput(data.userinfo.expire) : '',
     });
-    setDnsOptions(data.dnsOptions);
     setSubscriptionUrl('');
     setError('');
     showToast('已导入，可以继续编辑');
@@ -87,7 +84,6 @@ export function SubscriptionForm() {
           mixedPort: advanced.mixedPort,
           mode: advanced.mode,
         },
-        dnsOptions,
         userinfo: buildUserinfo(advanced),
       });
 

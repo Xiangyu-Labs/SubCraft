@@ -50,7 +50,6 @@ export interface SubscriptionData {
   links: string[];           // 代理链接数组
   upstreams?: string[];      // 上游订阅地址，由服务端拉取并透传流量信息
   template: RuleTemplate;    // 规则模板
-  client?: ClientType;       // 仅旧链接携带；新链接按 User-Agent 判断
   name?: string;             // 订阅名称，客户端里显示
   baseConfig?: ClashBaseConfig;  // 可选，有默认值
   dnsOptions?: ClashDNSOptions;  // 可选，有默认值

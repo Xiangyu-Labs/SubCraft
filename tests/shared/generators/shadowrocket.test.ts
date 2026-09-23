@@ -22,7 +22,6 @@ describe('shadowrocket generator', () => {
     const subscriptionData: SubscriptionData = {
       links: [],
       template: 'blacklist',
-      client: 'shadowrocket',
     };
     const config = generateShadowrocketConfig(testNodes, subscriptionData, ORIGIN);
 
@@ -41,7 +40,6 @@ describe('shadowrocket generator', () => {
     const subscriptionData: SubscriptionData = {
       links: [],
       template: 'blacklist',
-      client: 'shadowrocket',
     };
     const config = generateShadowrocketConfig(nodes, subscriptionData, ORIGIN);
 
@@ -55,7 +53,6 @@ describe('shadowrocket generator', () => {
     const subscriptionData: SubscriptionData = {
       links: [],
       template: 'blacklist',
-      client: 'shadowrocket',
     };
     const config = generateShadowrocketConfig(nodes, subscriptionData, ORIGIN);
 
@@ -69,7 +66,6 @@ describe('shadowrocket generator', () => {
     const subscriptionData: SubscriptionData = {
       links: [],
       template: 'blacklist',
-      client: 'shadowrocket',
     };
     const config = generateShadowrocketConfig(nodes, subscriptionData, ORIGIN);
 
@@ -96,7 +92,6 @@ describe('shadowrocket generator', () => {
     const subscriptionData: SubscriptionData = {
       links: [],
       template: 'blacklist',
-      client: 'shadowrocket',
     };
     const config = generateShadowrocketConfig(nodes, subscriptionData, ORIGIN);
 
@@ -121,7 +116,6 @@ describe('shadowrocket generator', () => {
     const subscriptionData: SubscriptionData = {
       links: [],
       template: 'blacklist',
-      client: 'shadowrocket',
     };
     const config = generateShadowrocketConfig(nodes, subscriptionData, ORIGIN);
 
@@ -144,7 +138,6 @@ describe('shadowrocket generator', () => {
     const subscriptionData: SubscriptionData = {
       links: [],
       template: 'blacklist',
-      client: 'shadowrocket',
     };
     const config = generateShadowrocketConfig(nodes, subscriptionData, ORIGIN);
 
@@ -154,7 +147,7 @@ describe('shadowrocket generator', () => {
   it('references rule sets by absolute url, never by bare name', () => {
     const config = generateShadowrocketConfig(
       testNodes,
-      { links: [], template: 'blacklist-adguard', client: 'shadowrocket' },
+      { links: [], template: 'blacklist-adguard' },
       ORIGIN,
     );
 
@@ -166,7 +159,7 @@ describe('shadowrocket generator', () => {
   it('sends node and private traffic direct, ahead of everything else', () => {
     const config = generateShadowrocketConfig(
       testNodes,
-      { links: [], template: 'whitelist', client: 'shadowrocket' },
+      { links: [], template: 'whitelist' },
       ORIGIN,
     );
     const rules = config.slice(config.indexOf('[Rule]')).split('\n');
@@ -178,12 +171,12 @@ describe('shadowrocket generator', () => {
   it('picks the dns servers matching the template direction', () => {
     const cn = generateShadowrocketConfig(
       testNodes,
-      { links: [], template: 'blacklist', client: 'shadowrocket' },
+      { links: [], template: 'blacklist' },
       ORIGIN,
     );
     const overseas = generateShadowrocketConfig(
       testNodes,
-      { links: [], template: 'reverse-blacklist', client: 'shadowrocket' },
+      { links: [], template: 'reverse-blacklist' },
       ORIGIN,
     );
 
@@ -194,7 +187,7 @@ describe('shadowrocket generator', () => {
   it('maps MATCH,DIRECT to FINAL,DIRECT', () => {
     const config = generateShadowrocketConfig(
       testNodes,
-      { links: [], template: 'blacklist', client: 'shadowrocket' },
+      { links: [], template: 'blacklist' },
       ORIGIN,
     );
     expect(config).toContain('FINAL,DIRECT');

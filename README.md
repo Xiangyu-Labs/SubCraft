@@ -82,7 +82,7 @@ npm run dev
 1. 在首页输入代理链接或上游订阅地址（每行一个，`http(s)://` 开头的行视为上游订阅），下方会实时列出解析结果
 2. 选择规则模板；高级配置里可设订阅名称、端口、模式，以及手填总流量 / 到期日期
 3. 点击"生成订阅链接"，复制链接或用 Shadowrocket 扫码
-4. 要修改时，把旧链接粘进顶部的导入框，回填后编辑再重新生成
+4. 要修改时，把已生成的链接粘进顶部的导入框，回填后编辑再重新生成
 
 ### 链接长度
 
@@ -98,8 +98,8 @@ npm run dev
 
 ### 格式选择
 
-`?client=clash|shadowrocket` 显式指定 > 旧链接里编码的客户端 > User-Agent
-（含 `Shadowrocket` 输出 .conf，其余输出 Clash YAML）。旧版生成的链接继续可用。
+`?client=clash|shadowrocket` 显式指定 > User-Agent
+（含 `Shadowrocket` 输出 .conf，其余输出 Clash YAML）。
 
 ## 生成的配置
 
@@ -147,7 +147,7 @@ GitHub Variables：
 │   │   ├── subscription.ts       # 订阅渲染：选格式、合并节点、响应头
 │   │   └── upstream.ts           # 拉取上游订阅、解析 userinfo
 │   ├── shared/                   # 前后端共享
-│   │   ├── encoder.ts            # 链接编码（v2 + 兼容 v1）与校验
+│   │   ├── encoder.ts            # 链接编码与校验
 │   │   ├── parsers/              # 各协议分享链接解析
 │   │   ├── generators/           # Clash / Shadowrocket 配置生成
 │   │   ├── rules.ts

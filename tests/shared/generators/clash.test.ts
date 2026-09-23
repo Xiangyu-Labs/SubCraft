@@ -22,7 +22,6 @@ describe('clash generator', () => {
     const subscriptionData: SubscriptionData = {
       links: [],
       template: 'blacklist',
-      client: 'clash',
     };
     const config = generateClashConfig(testNodes, subscriptionData, ORIGIN);
 
@@ -39,7 +38,6 @@ describe('clash generator', () => {
     const subscriptionData: SubscriptionData = {
       links: [],
       template: 'blacklist-adguard',
-      client: 'clash',
     };
     const config = generateClashConfig(testNodes, subscriptionData, ORIGIN);
 
@@ -55,7 +53,7 @@ describe('clash generator', () => {
     for (const template of ['blacklist', 'whitelist-adguard', 'reverse-whitelist'] as const) {
       const config = generateClashConfig(
         testNodes,
-        { links: [], template, client: 'clash' },
+        { links: [], template },
         ORIGIN,
       );
       for (const rule of config.rules) {
@@ -74,7 +72,6 @@ describe('clash generator', () => {
     const subscriptionData: SubscriptionData = {
       links: [],
       template: 'whitelist',
-      client: 'clash',
     };
     const config = generateClashConfig(nodes, subscriptionData, ORIGIN);
 
@@ -87,7 +84,6 @@ describe('clash generator', () => {
     const subscriptionData: SubscriptionData = {
       links: [],
       template: 'blacklist',
-      client: 'clash',
       baseConfig: {
         mixedPort: 7891,
         allowLan: true,
@@ -109,7 +105,6 @@ describe('clash generator', () => {
     const basic: SubscriptionData = {
       links: [],
       template: 'blacklist',
-      client: 'clash',
     };
 
     it('defaults to reachable domestic resolvers with no fallback', () => {
@@ -192,7 +187,7 @@ describe('clash generator', () => {
           { type: 'vless', name: 'A', server: 'vps.example.com', port: 443, uuid: 'u1' },
           { type: 'vless', name: 'B', server: '1.2.3.4', port: 443, uuid: 'u2' },
         ],
-        { links: [], template: 'whitelist', client: 'clash' },
+        { links: [], template: 'whitelist' },
         ORIGIN,
       );
 
@@ -204,7 +199,7 @@ describe('clash generator', () => {
     it('does not put IP-literal nodes in fake-ip-filter', () => {
       const config = generateClashConfig(
         [{ type: 'vless', name: 'B', server: '1.2.3.4', port: 443, uuid: 'u2' }],
-        { links: [], template: 'whitelist', client: 'clash' },
+        { links: [], template: 'whitelist' },
         ORIGIN,
       );
       expect(config.dns['fake-ip-filter']).not.toContain('1.2.3.4');
@@ -214,7 +209,7 @@ describe('clash generator', () => {
   it('points geox-url at a mirror reachable from China', () => {
     const config = generateClashConfig(
       testNodes,
-      { links: [], template: 'blacklist', client: 'clash' },
+      { links: [], template: 'blacklist' },
       ORIGIN,
     );
     expect(config['geox-url']!.mmdb).not.toContain('github.com');
@@ -239,7 +234,7 @@ describe('clash generator', () => {
     };
     const config = generateClashConfig(
       [realityNode],
-      { links: [], template: 'blacklist', client: 'clash' },
+      { links: [], template: 'blacklist' },
       ORIGIN,
     );
 
@@ -260,7 +255,7 @@ describe('clash generator', () => {
   it('enables udp with xudp packet encoding', () => {
     const config = generateClashConfig(
       testNodes,
-      { links: [], template: 'blacklist', client: 'clash' },
+      { links: [], template: 'blacklist' },
       ORIGIN,
     );
     expect(config.proxies[0].udp).toBe(true);
@@ -281,7 +276,7 @@ describe('clash generator', () => {
     };
     const config = generateClashConfig(
       [grpcNode],
-      { links: [], template: 'blacklist', client: 'clash' },
+      { links: [], template: 'blacklist' },
       ORIGIN,
     );
 
@@ -304,7 +299,7 @@ describe('clash generator', () => {
     };
     const config = generateClashConfig(
       [insecureNode],
-      { links: [], template: 'blacklist', client: 'clash' },
+      { links: [], template: 'blacklist' },
       ORIGIN,
     );
     expect(config.proxies[0]['skip-cert-verify']).toBe(true);

@@ -32,7 +32,6 @@ describe('functions/api/sub', () => {
     const data: SubscriptionData = {
       links: ['not-a-vless-link'],
       template: 'blacklist',
-      client: 'clash',
     };
     const encoded = encodeSubscriptionData(data);
     const res = await onRequestGet(
@@ -45,7 +44,6 @@ describe('functions/api/sub', () => {
     const data: SubscriptionData = {
       links: ['vless://uuid@example.com:443?encryption=none#TestNode'],
       template: 'blacklist',
-      client: 'clash',
     };
     const encoded = encodeSubscriptionData(data);
     const res = await onRequestGet(
@@ -65,7 +63,6 @@ describe('functions/api/sub', () => {
         'not-a-vless-link',
       ],
       template: 'blacklist',
-      client: 'clash',
     };
     const encoded = encodeSubscriptionData(data);
     const res = await onRequestGet(
@@ -91,11 +88,10 @@ describe('functions/api/sub', () => {
     const data: SubscriptionData = {
       links: ['vless://uuid@example.com:443?encryption=none#TestNode'],
       template: 'blacklist',
-      client: 'shadowrocket',
     };
     const encoded = encodeSubscriptionData(data);
     const res = await onRequestGet(
-      makeContext(`https://app.test/api/sub?data=${encoded}`),
+      makeContext(`https://app.test/api/sub?data=${encoded}&client=shadowrocket`),
     );
     expect(res.status).toBe(200);
     expect(res.headers.get('Content-Type')).toMatch(/text\/plain/);
@@ -110,7 +106,6 @@ describe('functions/api/sub', () => {
         'vless://uuid2@b.example.com:443?encryption=none',
       ],
       template: 'blacklist',
-      client: 'clash',
     };
     const res = await onRequestGet(
       makeContext(`https://app.test/api/sub?data=${encodeSubscriptionData(data)}`),
@@ -125,7 +120,6 @@ describe('functions/api/sub', () => {
     const data: SubscriptionData = {
       links: ['vless://uuid@example.com:443?encryption=none#N'],
       template: 'blacklist',
-      client: 'clash',
     };
     const res = await onRequestGet(
       makeContext(`https://app.test/api/sub?data=${encodeSubscriptionData(data)}`),
@@ -141,7 +135,6 @@ describe('functions/api/sub', () => {
     const data: SubscriptionData = {
       links: ['vless://uuid@example.com:443?encryption=none#N'],
       template: 'blacklist',
-      client: 'clash',
     };
     const res = await onRequestGet(
       makeContext(`https://app.test/api/sub?data=${encodeSubscriptionData(data)}`),
@@ -182,7 +175,7 @@ describe('functions/api/sub headers & clients', () => {
     expect(res.headers.get('Content-Disposition')).toContain("filename*=UTF-8''%E6%88%91%E7%9A%84.yaml");
   });
 
-  it('picks the format from the user agent, with ?client= and legacy data taking precedence', async () => {
+  it('picks the format from the user agent, with ?client= taking precedence', async () => {
     const data: SubscriptionData = { links: [LINK], template: 'blacklist' };
     const sr = await onRequestGet(withUA(url(data), 'Shadowrocket/2070 CFNetwork/1485'));
     expect(await sr.text()).toContain('[Proxy]');
@@ -192,9 +185,6 @@ describe('functions/api/sub headers & clients', () => {
 
     const forced = await onRequestGet(withUA(url(data, '&client=clash'), 'Shadowrocket/2070'));
     expect(await forced.text()).toContain('proxies:');
-
-    const legacy = await onRequestGet(withUA(url({ ...data, client: 'shadowrocket' }), 'clash.meta'));
-    expect(await legacy.text()).toContain('[Proxy]');
   });
 
   it('merges upstream nodes and passes their traffic through', async () => {

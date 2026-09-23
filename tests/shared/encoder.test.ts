@@ -13,7 +13,6 @@ describe('encoder', () => {
   const testData: SubscriptionData = {
     links: ['vless://test@example.com:443?encryption=none#TestNode'],
     template: 'blacklist',
-    client: 'clash',
   };
 
   it('should encode and decode data correctly', () => {
@@ -28,7 +27,6 @@ describe('encoder', () => {
     const data: SubscriptionData = {
       links: ['vless://1@host1:443#Node1', 'vless://2@host2:443#Node2'],
       template: 'blacklist',
-      client: 'clash',
     };
     const encoded = encodeSubscriptionData(data);
     const decoded = decodeSubscriptionData(encoded);
@@ -40,7 +38,7 @@ describe('encoder', () => {
   });
 });
 
-describe('encoder v2', () => {
+describe('encoder compact format', () => {
   const links = [
     'vless://7f1c0d2e-7c8a-4b58-9a2e-4d0b1f3a9e11@hk.example.com:443?encryption=none&flow=xtls-rprx-vision&security=reality&sni=www.microsoft.com&fp=chrome&pbk=Zq3V0y7nQx1mJ8rT2aB5cD6eF7gH8iJ9kL0mN1oP2qR&sid=6ba85179&type=tcp#HK',
   ];
@@ -66,26 +64,14 @@ describe('encoder v2', () => {
     expect(decoded.baseConfig).toBeUndefined();
   });
 
-  it('is shorter than the v1 gzip format', () => {
+  it('is much shorter than gzipped full json', () => {
     const data: SubscriptionData = {
       links,
       template: 'blacklist',
-      client: 'clash',
       baseConfig: { mixedPort: 7890, allowLan: false, mode: 'rule', logLevel: 'info', ipv6: false },
     };
-    const v1 = bytesToBase64Url(pako.gzip(JSON.stringify(data)));
-    expect(encodeSubscriptionData(data).length).toBeLessThan(v1.length * 0.8);
-  });
-
-  it('still decodes v1 (gzip + full json) links', () => {
-    const v1Data: SubscriptionData = {
-      links,
-      template: 'blacklist',
-      client: 'shadowrocket',
-      baseConfig: { mixedPort: 7890, allowLan: false, mode: 'rule', logLevel: 'info', ipv6: false },
-    };
-    const v1 = bytesToBase64Url(pako.gzip(JSON.stringify(v1Data)));
-    expect(decodeSubscriptionData(v1)).toEqual(v1Data);
+    const gzipped = bytesToBase64Url(pako.gzip(JSON.stringify(data)));
+    expect(encodeSubscriptionData(data).length).toBeLessThan(gzipped.length * 0.8);
   });
 
   it('extracts data from a subscription url', () => {
@@ -106,7 +92,6 @@ describe('validateSubscriptionData', () => {
     expect(() => validateSubscriptionData(null)).toThrow();
     expect(() => validateSubscriptionData({ ...ok, links: 'x' })).toThrow();
     expect(() => validateSubscriptionData({ ...ok, template: 'nope' })).toThrow();
-    expect(() => validateSubscriptionData({ ...ok, client: 'surge' })).toThrow();
     expect(() => validateSubscriptionData({ ...ok, userinfo: { total: -1 } })).toThrow();
     expect(() => validateSubscriptionData({ links: [], template: 'blacklist' })).toThrow();
   });
