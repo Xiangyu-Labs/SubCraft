@@ -19,14 +19,14 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <>
       <label className="pt-1.5 text-muted">{label}</label>
-      <div>{children}</div>
+      <div className="min-w-0">{children}</div>
     </>
   );
 }
 
 export function AdvancedOptions({ values, onChange }: Props) {
   return (
-    <div className="grid grid-cols-[6rem_1fr] gap-x-3 gap-y-2">
+    <div className="grid grid-cols-[6rem_minmax(0,1fr)] gap-x-3 gap-y-2">
       <Row label="name">
         <input
           value={values.name}
